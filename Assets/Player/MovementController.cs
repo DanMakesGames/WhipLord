@@ -57,7 +57,7 @@ public class MovementController : MonoBehaviour {
 
 	// If true, the movement controller ignores inintial penetrations durring the Move function. Used for penetration 
 	// resolution.
-	bool bIgnoreInitPenetration;
+	private bool bIgnoreInitPenetration;
 
 
 	void Start () {
@@ -69,11 +69,13 @@ public class MovementController : MonoBehaviour {
 	
 
 	void Update () {
+		/*
 		if (moveState == MOVE_STATE.WALKING) {
 			Debug.Log ("Walking");
 		} else {
 			Debug.Log ("FALLING");
 		}
+		*/
 		//Do not run movement if there is no body.
 		if (collisionBody == null)
 			return;
@@ -149,7 +151,7 @@ public class MovementController : MonoBehaviour {
 					if( hits[hitIndex].distance > MIN_FLOOR_DIST) {
 						Debug.Log ("Standing adjust");
 						RaycastHit adjustHit;
-						MoveAndResolve (new Vector3(0.0f, 0.0f, MIN_FLOOR_DIST - hits[hitIndex].distance),transform.rotation,out adjustHit);
+						MoveAndResolve (new Vector3(0.0f, MIN_FLOOR_DIST - hits[hitIndex].distance, 0.0f ),transform.rotation,out adjustHit);
 						
 					}
 
@@ -166,13 +168,6 @@ public class MovementController : MonoBehaviour {
 				velocity = Vector3.zero;
 			}
 		}
-
-
-
-
-
-
-		//velocity = Vector3.zero;
 	}
 
 
@@ -204,7 +199,12 @@ public class MovementController : MonoBehaviour {
 	void ProcessInput() {
 		if (moveState == MOVE_STATE.WALKING) {
 			// This is gonna need to change for sloped floor. Change after finishing MOVE system.
-			velocity += transform.rotation * inputVelocity * maxMoveSpeed;
+			//velocity += transform.rotation * inputVelocity * maxMoveSpeed;
+			Vector3 rotSafeInput = (transform.rotation * inputVelocity).normalized;
+			float Y = -Vector3.Dot (GroundPlane, rotSafeInput) / GroundPlane.y;
+			Vector3 direction = rotSafeInput;
+			direction.y = Y;
+			velocity += direction.normalized * maxMoveSpeed;
 		}
 
 		rotVelocity = inputRotVelocity;
@@ -400,9 +400,24 @@ public class MovementController : MonoBehaviour {
 		return true;
 	}
 
+	/**
+	 * Walks onto a slope. This is useful for overcoming peaks, when the angles may be incorrect. It also preserves 
+	 * motion.
+	 */
+	private bool PerformWalkup(Vector3 moveDelta, RaycastHit slopeHit, out RaycastHit outHit) {
+		
 
-	private bool PerformWalkup() {
-		return true;
+		Vector3 flatMovement = new Vector3 (moveDelta.x, 0, moveDelta.z);
+		float groundFlatDeltaDot = Vector3.Dot (slopeHit.normal, flatMovement);
+		Vector3 moveDirection = flatMovement;
+		moveDirection.y = -(groundFlatDeltaDot / slopeHit.normal.z);
+		Vector3 walkupDelta = moveDirection.normalized * (moveDelta * (slopeHit.distance / moveDelta.magnitude)).magnitude;
+
+		RaycastHit walkupHit;
+		bool bCompleteMove = MoveAndResolve (walkupDelta, transform.rotation, out walkupHit);
+		outHit = walkupHit;
+
+		return bCompleteMove;
 	}
 
 
@@ -425,7 +440,7 @@ public class MovementController : MonoBehaviour {
 		*/
 
 		float distanceFromCenter = vectorFromCenter.magnitude;
-		Debug.Log ("Point"+ vectorFromCenter + "Distance: " + distanceFromCenter + " Radius: " + (collisionBody.radius  - GROUND_DETECT_RADIUS_TOLERANCE));
+		//Debug.Log ("Point"+ vectorFromCenter + "Distance: " + distanceFromCenter + " Radius: " + (collisionBody.radius  - GROUND_DETECT_RADIUS_TOLERANCE));
 		return distanceFromCenter < collisionBody.radius - GROUND_DETECT_RADIUS_TOLERANCE;
 	}
 
