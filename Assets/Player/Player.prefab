@@ -178,6 +178,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxMoveSpeed: 100
+  gravity: -150
+  maxWalkableSlope: 60
 --- !u!114 &114661485987918348
 MonoBehaviour:
   m_ObjectHideFlags: 1

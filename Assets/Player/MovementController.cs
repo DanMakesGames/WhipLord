@@ -12,7 +12,11 @@ public class MovementController : MonoBehaviour {
 	// Distance to place stop before a hit object durring a move. This helps prevent moving inside of objects.
 	private const float MOVE_HIT_SPACE = 0.001f;
 	private const float RESOLVE_STRICTNESS = 0.1f;
-
+	private const float PENETRATE_ADDITIONAL_SPACING = 0.125f;
+	//private const float GROUND_DETECT_RADIUS_TOLERANCE = 0.15f;
+	private const float GROUND_DETECT_RADIUS_TOLERANCE = 0.05f;
+	private const float MAX_FLOOR_DIST = 2.4f;
+	private const float MIN_FLOOR_DIST = 1.0f;
 
 
 	enum MOVE_STATE { WALKING, FALLING, HALTED };
@@ -20,6 +24,13 @@ public class MovementController : MonoBehaviour {
 
 	[SerializeField]
 	private float maxMoveSpeed = 1;
+	[SerializeField]
+	private float gravity = -10;
+
+	// In degrees, the max angle from Up vector that hte player can walk
+	[SerializeField]
+	private float maxWalkableSlope = 60;
+	
 
 	// Current player velocities.
 	private Vector3 velocity;
@@ -40,7 +51,7 @@ public class MovementController : MonoBehaviour {
 			return groundPlane;
 		}
 		protected set {
-			groundPlane = value;
+			groundPlane = value.normalized;
 		}
 	}
 
@@ -51,14 +62,18 @@ public class MovementController : MonoBehaviour {
 
 	void Start () {
 		collisionBody = GetComponent<CapsuleCollider> ();
-		moveState = MOVE_STATE.WALKING;
+		moveState = MOVE_STATE.FALLING;
 
 		bIgnoreInitPenetration = false;
 	}
 	
 
 	void Update () {
-
+		if (moveState == MOVE_STATE.WALKING) {
+			Debug.Log ("Walking");
+		} else {
+			Debug.Log ("FALLING");
+		}
 		//Do not run movement if there is no body.
 		if (collisionBody == null)
 			return;
@@ -77,11 +92,87 @@ public class MovementController : MonoBehaviour {
 	 * 
 	 */
 	void PerformMovement() {
+		//Velocity Update
+		if (moveState == MOVE_STATE.WALKING) {
+			
+		}
+		else if (moveState == MOVE_STATE.FALLING) {
+			velocity += new Vector3 (0, gravity, 0) * Time.deltaTime;
+		}
+
 		Vector3 moveDelta = velocity * Time.deltaTime;
 		Quaternion rotDelta = Quaternion.Euler(rotVelocity.eulerAngles * Time.deltaTime);
-		RaycastHit hit = new RaycastHit();
-		Move (moveDelta,rotDelta,ref hit,null);
-		velocity = Vector3.zero;
+
+		RaycastHit hit;
+		bool bCompleteMove = MoveAndResolve(moveDelta, rotDelta,out  hit);
+
+		//Handle Blocking collision
+		if (!bCompleteMove) {
+			
+			//If the Hit is a bottom hit
+			if (IsBottomHit (hit)) {
+				Debug.Log ("Bottom Hit");
+				if (moveState == MOVE_STATE.FALLING) {
+					moveState = MOVE_STATE.WALKING;
+				} else if (moveState == MOVE_STATE.WALKING) {
+					// Handle Walk Up here.
+				}
+			}
+			// Hit is on side of body.
+			else {
+				//Handle wall slide here.
+			}
+
+		}
+
+		//Peform Ground Check and update ground state
+		if (moveState == MOVE_STATE.WALKING) {
+			// Fist sweep downward and check for ground
+			//RaycastHit[] hits = Physics.CapsuleCastAll (transform.position + new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0),
+			//	transform.position - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), collisionBody.radius, moveDelta.normalized, 
+			//	moveDelta.magnitude);
+			RaycastHit[] hits = Physics.CapsuleCastAll(transform.position + new Vector3(0,collisionBody.height / 2.0f - collisionBody.radius, 0), 
+				transform.position - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), 
+				collisionBody.radius, Vector3.down, MAX_FLOOR_DIST);
+
+			bool bGroundFound = false;
+			//Loop through the hits looking for a valid ground
+			for(int hitIndex = 0; hitIndex < hits.Length; hitIndex++) {
+				if (IsBottomHit (hits [hitIndex])) {
+
+					//Set Ground plane
+					if( IsSlopeWalkable(hit.normal)) {
+						GroundPlane = hit.normal;
+					}
+
+					//Floor Magentism
+					if( hits[hitIndex].distance > MIN_FLOOR_DIST) {
+						Debug.Log ("Standing adjust");
+						RaycastHit adjustHit;
+						MoveAndResolve (new Vector3(0.0f, 0.0f, MIN_FLOOR_DIST - hits[hitIndex].distance),transform.rotation,out adjustHit);
+						
+					}
+
+					bGroundFound = true;
+					break;
+				}
+			
+			}
+
+			if (!bGroundFound) {
+				moveState = MOVE_STATE.FALLING;
+			}
+			else {
+				velocity = Vector3.zero;
+			}
+		}
+
+
+
+
+
+
+		//velocity = Vector3.zero;
 	}
 
 
@@ -112,15 +203,11 @@ public class MovementController : MonoBehaviour {
 	 */
 	void ProcessInput() {
 		if (moveState == MOVE_STATE.WALKING) {
-
-
 			// This is gonna need to change for sloped floor. Change after finishing MOVE system.
 			velocity += transform.rotation * inputVelocity * maxMoveSpeed;
-			//Debug.Log ("adding velocity " + velocity);
 		}
 
 		rotVelocity = inputRotVelocity;
-
 
 		//Reset input in preperation for next Frame of input collection
 		inputVelocity = new Vector3 (0,0,0);
@@ -133,8 +220,8 @@ public class MovementController : MonoBehaviour {
 	 * 
 	 * @return Returns true if move completes with no collision.
 	 */
-	bool Move(Vector3 moveDelta, Quaternion rotDelta, ref RaycastHit outHit, LinkedList<GameObject> ignoreObjects) {
-		Debug.Log ("Start: " +moveDelta);
+	bool Move(Vector3 moveDelta, Quaternion rotDelta, out RaycastHit outHit, LinkedList<GameObject> ignoreObjects) {
+		outHit = new RaycastHit();
 		//Start with rotation update.
 		transform.rotation = transform.rotation * rotVelocity;
 
@@ -182,13 +269,13 @@ public class MovementController : MonoBehaviour {
 		}
 
 		if (bCompleteMove) {
-			Debug.Log ("Applying movement" + moveDelta);
+			//Debug.Log ("Complete Move");
 			transform.position += moveDelta;
 
 			return true;
 		}
 		else {
-			Debug.Log ("Applying movement");
+			//Debug.Log ("Blocked Move");
 			if (bIgnoreInitPenetration)
 				transform.position += moveDelta * (outHit.distance / moveDelta.magnitude);
 			else
@@ -202,8 +289,8 @@ public class MovementController : MonoBehaviour {
 	/**
 	 * Move overload where no actors are ignored.
 	 */
-	bool Move(Vector3 moveDelta, Quaternion rotDelta, ref RaycastHit outHit) {
-		return Move (moveDelta, rotDelta, ref outHit, null);
+	bool Move(Vector3 moveDelta, Quaternion rotDelta, out RaycastHit outHit) {
+		return Move (moveDelta, rotDelta, out outHit, null);
 	}
 
 
@@ -213,8 +300,21 @@ public class MovementController : MonoBehaviour {
 	 * 
 	 * @return Returns true if move fully completes with no collision.
 	 */
-	public bool MoveAndResolve() {
-		return true;
+	public bool MoveAndResolve(Vector3 moveDelta, Quaternion rotDelta, out RaycastHit outHit) {
+		RaycastHit hit;
+		//Initial Move Attempt
+		bool bCompleteMove = Move(moveDelta, rotDelta, out hit);
+
+		// If the move started penetrating, resolve the penetration and try move again.
+		if(!bCompleteMove && IsStartPenetrating(hit)) {
+			Vector3 penetrationAdjustment = CalcPenetrationAdjustment (hit);
+			ResolvePenetration (penetrationAdjustment, hit, transform.rotation);
+			bCompleteMove = Move (moveDelta, rotDelta, out hit);
+		}
+
+		outHit = hit;
+
+		return bCompleteMove;
 	}
 
 
@@ -235,13 +335,32 @@ public class MovementController : MonoBehaviour {
 				bValidOverlapOccured = true;
 			}
 		}
-		
+
+		//No overlap occured, so the player can just be teleported
 		if (!bValidOverlapOccured) {
 			transform.position += proposedAdjustment;
-
 		} 
 		// If we cannot teleport out try the two methods of resolution.
 		else {
+			// First try to move out of the penetration.
+			RaycastHit moveOutHit = new RaycastHit();
+			bool bCompleteMove = Move (proposedAdjustment, newRotation, out moveOutHit);
+
+			//Dual Penetration solver
+			if(!bCompleteMove && IsStartPenetrating(moveOutHit)) {
+				Vector3 otherAdjustment = CalcPenetrationAdjustment(moveOutHit);
+				Vector3 comboAdjustment = otherAdjustment + proposedAdjustment;
+
+				if(otherAdjustment != proposedAdjustment && comboAdjustment != Vector3.zero) {
+					bIgnoreInitPenetration = true;
+					bCompleteMove = Move (comboAdjustment, transform.rotation,out moveOutHit);
+					bIgnoreInitPenetration = false;
+				}
+
+				// Add The Other solver here
+
+
+			}
 		
 		}
 
@@ -256,9 +375,19 @@ public class MovementController : MonoBehaviour {
 	}
 
 
-	private Vector3 CalcPenetrationAdjustment() {
-		//Physics.ComputePenetration......
-		return Vector3.zero;
+	private Vector3 CalcPenetrationAdjustment(RaycastHit hit) {
+		//If not penetrating then return nothing.
+		if(!IsStartPenetrating(hit)) {
+			return Vector3.zero;
+		}
+
+		Vector3 direction;
+		float distance;
+		bool  bDidCalc = Physics.ComputePenetration (collisionBody, transform.position, transform.rotation, 
+			hit.collider, hit.collider.transform.position, hit.collider.transform.rotation, out direction, out distance);
+
+		float penetrationDepth  = (distance > 0.0f ? distance : PENETRATE_ADDITIONAL_SPACING);
+		return  direction * (penetrationDepth + PENETRATE_ADDITIONAL_SPACING);
 	}
 
 
@@ -274,6 +403,38 @@ public class MovementController : MonoBehaviour {
 
 	private bool PerformWalkup() {
 		return true;
+	}
+
+
+	private bool IsStartPenetrating(RaycastHit hit) {
+		return (hit.distance == 0 && hit.point == Vector3.zero);
+	}
+
+
+	/**
+	 * Checks if the hit is touching the botttom hemisphere of the capsule collider
+	 */
+	private bool IsBottomHit(RaycastHit hit) {
+		Debug.DrawRay (hit.point, new Vector3(0,1,0));
+		Vector3 vectorFromCenter = hit.point - transform.position;
+		vectorFromCenter.y = 0;
+		/*
+		float distanceFromCenter = vectorFromCenter.sqrMagnitude;
+		Debug.Log ("Distance: " + distanceFromCenter + " Radius: " + Mathf.Pow (collisionBody.radius - GROUND_DETECT_RADIUS_TOLERANCE,2));
+		return distanceFromCenter < Mathf.Pow (collisionBody.radius - GROUND_DETECT_RADIUS_TOLERANCE,2);
+		*/
+
+		float distanceFromCenter = vectorFromCenter.magnitude;
+		Debug.Log ("Point"+ vectorFromCenter + "Distance: " + distanceFromCenter + " Radius: " + (collisionBody.radius  - GROUND_DETECT_RADIUS_TOLERANCE));
+		return distanceFromCenter < collisionBody.radius - GROUND_DETECT_RADIUS_TOLERANCE;
+	}
+
+
+	/**
+	 * Checks to see if a slope angle is not too slanted. Returns if a player can walk on it.
+	 */
+	private bool IsSlopeWalkable(Vector3 groundNormal) {
+		return Vector3.Angle (groundNormal, Vector3.up) < maxWalkableSlope ;
 	}
 
 
