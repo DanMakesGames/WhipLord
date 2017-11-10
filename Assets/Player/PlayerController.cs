@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using CommandSpace;
 
-public class PlayerController : MonoBehaviour {
-	MovementController moveCont;
+public class PlayerController : CommandController {
+	//MovementController moveCont;
 	Camera playerCamera;
+	//Command[] playerCommands;
 
 	void Awake() {
 		Cursor.lockState = CursorLockMode.Locked;
@@ -12,31 +14,41 @@ public class PlayerController : MonoBehaviour {
 
 
 	void Start () {
-		moveCont = GetComponent<MovementController> ();
+		MoveCont = GetComponent<MovementController> ();
 		playerCamera = GetComponentInChildren<Camera> ();
+
+		//playerCommands = new Command[1];
+		//playerCommands[0] = new
 	}
 	
 
 	void Update () {
-		
 		ProcessInput ();
-
+		ProcessCommand ();
 	}
 
 	void ProcessInput() {
 		
+		float attackInput = Input.GetAxis ("Attack");
+		if(attackInput == 1) {
+			Command newCommand = new WhipCommand ();
+			if (newCommand.Initialize (this)) {
+				CurrentCmd = newCommand;
+			}
+		}
+
 		float horizontalInput = Input.GetAxis ("Horizontal");
-		moveCont.AddMovementInput (new Vector3(horizontalInput,0,0));
+		MoveCont.AddMovementInput (new Vector3(horizontalInput,0,0));
 
 		float verticalInput = Input.GetAxis ("Vertical");
-		moveCont.AddMovementInput (new Vector3(0,0,verticalInput));
+		MoveCont.AddMovementInput (new Vector3(0,0,verticalInput));
 
 
 		float roll = - Input.GetAxis ("Mouse Y");
 		playerCamera.transform.rotation = playerCamera.transform.rotation * Quaternion.Euler (roll,0,0);
 
 		float pitch = Input.GetAxis("Mouse X");
-		moveCont.AddRotationInput (Quaternion.Euler(0,pitch,0));
+		MoveCont.AddRotationInput (Quaternion.Euler(0,pitch,0));
 
 
 	}

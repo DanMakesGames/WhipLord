@@ -265,7 +265,7 @@ public class MovementController : MonoBehaviour {
 	 * 
 	 * @return Returns true if move completes with no collision.
 	 */
-	bool Move(Vector3 moveDelta, Quaternion rotDelta, out RaycastHit outHit, LinkedList<GameObject> ignoreObjects) {
+	public bool Move(Vector3 moveDelta, Quaternion rotDelta, out RaycastHit outHit, LinkedList<GameObject> ignoreObjects) {
 		outHit = new RaycastHit();
 		//Start with rotation update.
 		transform.rotation = transform.rotation * rotVelocity;
