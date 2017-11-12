@@ -42,7 +42,7 @@ public class MovementController : MonoBehaviour {
 	// In degrees, the max angle from Up vector that hte player can walk
 	[SerializeField]
 	private float maxWalkableSlope = 60;
-	
+	private int castLayerMask;
 
 	// Current player velocities.
 	private Vector3 velocity;
@@ -77,6 +77,8 @@ public class MovementController : MonoBehaviour {
 		moveState = MOVE_STATE.FALLING;
 
 		bIgnoreInitPenetration = false;
+		castLayerMask = 1 << 8;
+		castLayerMask = ~castLayerMask;
 	}
 	
 
@@ -180,7 +182,7 @@ public class MovementController : MonoBehaviour {
 			//	moveDelta.magnitude);
 			RaycastHit[] hits = Physics.CapsuleCastAll(transform.position + new Vector3(0,collisionBody.height / 2.0f - collisionBody.radius, 0), 
 				transform.position - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), 
-				collisionBody.radius, Vector3.down, MAX_FLOOR_DIST);
+				collisionBody.radius, Vector3.down, MAX_FLOOR_DIST, castLayerMask);
 
 			bool bGroundFound = false;
 			//Loop through the hits looking for a valid ground
@@ -273,7 +275,7 @@ public class MovementController : MonoBehaviour {
 		// Start by doing collision sweep.
 		RaycastHit[] hits = Physics.CapsuleCastAll (transform.position + new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0),
 			transform.position - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), collisionBody.radius, moveDelta.normalized, 
-			moveDelta.magnitude);
+			moveDelta.magnitude, castLayerMask);
 
 		/*
 		Debug.Log ("HIT OBJECTS: ");
@@ -439,7 +441,7 @@ public class MovementController : MonoBehaviour {
 		
 		//Frist overlap check and see if the location we want to move to is clean
 		Collider[] overlaps = Physics.OverlapCapsule(transform.position + proposedAdjustment + new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), 
-			transform.position + proposedAdjustment - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), collisionBody.radius +  RESOLVE_STRICTNESS);
+			transform.position + proposedAdjustment - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), collisionBody.radius +  RESOLVE_STRICTNESS, castLayerMask);
 
 		Debug.Log ("PENETRATION RESOLVE: " + hit.collider.gameObject.name + " :: " +hit.normal + "::" + proposedAdjustment);
 		//Loop and find the first overlap that is not hitting gameObject

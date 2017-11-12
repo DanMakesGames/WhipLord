@@ -23,6 +23,11 @@ public class PlayerController : CommandController {
 	
 
 	void Update () {
+		
+
+	}
+
+	void FixedUpdate() {
 		ProcessInput ();
 		ProcessCommand ();
 	}
