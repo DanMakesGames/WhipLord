@@ -16,11 +16,11 @@ TagManager:
   - UI
   - 
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Player
+  - HitBox
+  - HurtBox
+  - OtherBox
+  - Enemy
   - 
   - 
   - 

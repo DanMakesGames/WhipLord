@@ -18,6 +18,10 @@ public class CommandController : PawnController
 			return currentCmd;
 		}
 		protected set {
+			if (currentCmd != null){
+				currentCmd.Terminate ();
+			currentCmd.CurrentState = 0;
+		}
 			currentCmd = value;
 		}
 	}

@@ -19,27 +19,9 @@ public abstract class PawnController : MonoBehaviour
 		}
 	}
 
-	/*
-	void Awake() {
-	}
+	// FUTURE: Some sort of damage type
+	public virtual void Hurt (float damage, Vector3 impact) {}
 
-	void Start() {
-		InitController ();
-	}
-
-	void Update() {
-		Tick ();
-	}
-
-	void FixedUpdate() {
-		FixedTick ();
-	}
-
-	protected virtual void Tick () {}
-	protected virtual void FixedTick () {}
-	protected virtual void InitController() {}
-	*/
-		
 }
 
 

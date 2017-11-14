@@ -20,7 +20,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4010234244632186}
   - component: {fileID: 20451386792046784}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Camera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -41,7 +41,7 @@ GameObject:
   - component: {fileID: 23333016392903000}
   - component: {fileID: 114661485987918348}
   - component: {fileID: 114227380973373504}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -165,7 +165,7 @@ Rigidbody:
   m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!114 &114227380973373504
 MonoBehaviour:
   m_ObjectHideFlags: 1

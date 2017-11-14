@@ -16,18 +16,20 @@ public class PlayerController : CommandController {
 	void Start () {
 		MoveCont = GetComponent<MovementController> ();
 		playerCamera = GetComponentInChildren<Camera> ();
-
-		//playerCommands = new Command[1];
-		//playerCommands[0] = new
+		MoveCont.CastLayerMask = 1 << 9;
+		MoveCont.CastLayerMask = MoveCont.CastLayerMask | 1 << 10;
+		MoveCont.CastLayerMask = MoveCont.CastLayerMask | 1 << 11;
+		MoveCont.CastLayerMask = ~ MoveCont.CastLayerMask;
 	}
 	
 
 	void Update () {
-		
+		//Debug.Log ("Update: " + Time.deltaTime);
 
 	}
 
 	void FixedUpdate() {
+		//Debug.Log ("Fixed Update: " + Time.deltaTime);
 		ProcessInput ();
 		ProcessCommand ();
 	}
@@ -42,12 +44,17 @@ public class PlayerController : CommandController {
 			}
 		}
 
+		if(Input.GetAxis("Alt Fire") == 1) {
+			Command newCommand = new KickCommand ();
+			if (newCommand.Initialize (this)) {
+				CurrentCmd = newCommand;
+			}
+		}
 		float horizontalInput = Input.GetAxis ("Horizontal");
 		MoveCont.AddMovementInput (new Vector3(horizontalInput,0,0));
 
 		float verticalInput = Input.GetAxis ("Vertical");
 		MoveCont.AddMovementInput (new Vector3(0,0,verticalInput));
-
 
 		float roll = - Input.GetAxis ("Mouse Y");
 		playerCamera.transform.rotation = playerCamera.transform.rotation * Quaternion.Euler (roll,0,0);
@@ -55,6 +62,7 @@ public class PlayerController : CommandController {
 		float pitch = Input.GetAxis("Mouse X");
 		MoveCont.AddRotationInput (Quaternion.Euler(0,pitch,0));
 
-
 	}
+
+
 }

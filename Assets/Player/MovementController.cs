@@ -42,7 +42,14 @@ public class MovementController : MonoBehaviour {
 	// In degrees, the max angle from Up vector that hte player can walk
 	[SerializeField]
 	private float maxWalkableSlope = 60;
+
+
 	private int castLayerMask;
+	public int CastLayerMask{
+		get { return castLayerMask;}
+		set { castLayerMask = value;}
+	}
+
 
 	// Current player velocities.
 	private Vector3 velocity;
@@ -71,14 +78,20 @@ public class MovementController : MonoBehaviour {
 	// resolution.
 	private bool bIgnoreInitPenetration;
 
-
+	void Awake() {
+		CastLayerMask = 1 << 9;
+		CastLayerMask = CastLayerMask | 1 << 10;
+		CastLayerMask = CastLayerMask | 1 << 11;
+		CastLayerMask = ~CastLayerMask;
+	}
 	void Start () {
 		collisionBody = GetComponent<CapsuleCollider> ();
 		moveState = MOVE_STATE.FALLING;
 
 		bIgnoreInitPenetration = false;
-		castLayerMask = 1 << 8;
-		castLayerMask = ~castLayerMask;
+		//castLayerMask = ~0;
+		//castLayerMask = 1 << 8;
+		//castLayerMask = ~castLayerMask;
 	}
 	
 
@@ -270,6 +283,7 @@ public class MovementController : MonoBehaviour {
 	public bool Move(Vector3 moveDelta, Quaternion rotDelta, out RaycastHit outHit, LinkedList<GameObject> ignoreObjects) {
 		outHit = new RaycastHit();
 		//Start with rotation update.
+		//transform.rotation = transform.rotation * rotVelocity;
 		transform.rotation = transform.rotation * rotVelocity;
 
 		// Start by doing collision sweep.
