@@ -307,28 +307,28 @@ namespace CommandSpace
 			// Start up
 			cmdStates [0] = new CommandState (10, 1);
 
-			cmdStates [1] = new CommandState (2, 2);
-			cmdStates [1].AddBox (new HitBox(new Vector3(0,0,0),Quaternion.identity,new Vector3(10,10,10),"1",10));
+			cmdStates [1] = new CommandState (2, 2,drawWhip);
+			cmdStates [1].AddBox (new HitBox(new Vector3(0,0,0),Quaternion.identity,new Vector3(1,1,1),"1",10));
 
-			cmdStates [2] = new CommandState (2, 3);
+			cmdStates [2] = new CommandState (2, 3, drawWhip);
 			cmdStates [2].CopyOverBoxes (cmdStates[1]);
-			cmdStates [2].AddBox (new HitBox(new Vector3(0,0,1),Quaternion.identity,new Vector3(10,10,10),"2",10));
+			cmdStates [2].AddBox (new HitBox(new Vector3(0,0,1),Quaternion.identity,new Vector3(1,1,1),"2",10));
 
-			cmdStates [3] = new CommandState (2, 4);
+			cmdStates [3] = new CommandState (2, 4, drawWhip);
 			cmdStates [3].CopyOverBoxes (cmdStates[2]);
-			cmdStates [3].AddBox (new HitBox(new Vector3(0,0,2),Quaternion.identity,new Vector3(10,10,10),"3",10));
+			cmdStates [3].AddBox (new HitBox(new Vector3(0,0,2),Quaternion.identity,new Vector3(1,1,1),"3",10));
 
-			cmdStates [4] = new CommandState (2, 5);
+			cmdStates [4] = new CommandState (2, 5, drawWhip);
 			cmdStates [4].CopyOverBoxes (cmdStates[3]);
-			cmdStates [4].AddBox (new HitBox(new Vector3(0,0,3),Quaternion.identity,new Vector3(10,10,10),"4",10));
+			cmdStates [4].AddBox (new HitBox(new Vector3(0,0,3),Quaternion.identity,new Vector3(1,1, 1),"4",10));
 
-			cmdStates [5] = new CommandState (2, 6);
+			cmdStates [5] = new CommandState (2, 6,drawWhip);
 			cmdStates [5].CopyOverBoxes (cmdStates[4]);
-			cmdStates [5].AddBox (new HitBox(new Vector3(0,0,4),Quaternion.identity,new Vector3(10,10,10),"5",10));
+			cmdStates [5].AddBox (new HitBox(new Vector3(0,0,4),Quaternion.identity,new Vector3(1,1,1),"5",10));
 
-			cmdStates [6] = new CommandState (2, 7);
+			cmdStates [6] = new CommandState (2, 7, drawWhip);
 			cmdStates [6].CopyOverBoxes (cmdStates[5]);
-			cmdStates [6].AddBox (new HitBox(new Vector3(0,0,5),Quaternion.identity,new Vector3(10,10,10),"6",10));
+			cmdStates [6].AddBox (new HitBox(new Vector3(0,0,5),Quaternion.identity,new Vector3(1,1,1),"6",10));
 
 			cmdStates [7] = new CommandState (whipEnd);
 		}
@@ -344,6 +344,9 @@ namespace CommandSpace
 			return true;
 		}
 
+		static void drawWhip(CommandState state, Command command, int stateFrame, int commandFrame) {
+			Debug.DrawLine (command.Owner.transform.position, command.Owner.transform.position + command.Owner.transform.rotation * new Vector3 (0, 0, 5.5f), Color.red);
+		}
 
 		static void whipStartUp(CommandState state, Command command, int stateFrame, int commandFrame) {
 			if ((stateFrame + 1) >= 10) {

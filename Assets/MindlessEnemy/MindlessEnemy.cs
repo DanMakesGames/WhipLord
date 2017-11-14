@@ -28,11 +28,14 @@ public class MindlessEnemy : PawnController {
 			heading.y = 0;
 			heading.Normalize ();
 
-			Quaternion newRot =  Quaternion.Euler (new Vector3 (0,Vector3.Angle(Vector3.forward, heading),0)) ;
-			MoveCont.AddMovementInput (heading);
+
+			//Quaternion newRot =  Quaternion.Euler (new Vector3 (0,Vector3.Angle(Vector3.forward, heading),0)) ;
+			Vector3 newRot =  Quaternion.FromToRotation (Vector3.forward, heading).eulerAngles;
+			transform.rotation =Quaternion.Euler( new Vector3(0,newRot.y,0));
 			//MoveCont.AddRotationInput (newRot);
-			transform.rotation = newRot;
+
 			heading = Quaternion.Inverse (transform.rotation) * heading;
+			MoveCont.AddMovementInput (heading);
 		}
 		else if (state == 1) {
 			MoveCont.AddMovementInput (new Vector3(0,0,-1));
