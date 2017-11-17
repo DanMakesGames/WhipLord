@@ -4,6 +4,8 @@ using UnityEngine;
 using CommandSpace;
 
 public class PlayerController : CommandController {
+	float health = 100;
+
 	//MovementController moveCont;
 	Camera playerCamera;
 	//Command[] playerCommands;
@@ -29,17 +31,26 @@ public class PlayerController : CommandController {
 	}
 
 	void FixedUpdate() {
-		//Debug.Log ("Fixed Update: " + Time.deltaTime);
+		if(health <= 0)
+		{
+			Application.Quit ();
+			//Destroy (gameObject);
+		}
+
+
 		ProcessInput ();
 		ProcessCommand ();
+		ProcessState ();
+	
 	}
 
 	void ProcessInput() {
 		
 		float attackInput = Input.GetAxis ("Attack");
 		if(attackInput == 1) {
-			Command newCommand = new WhipCommand ();
+			Command newCommand = new LongPoke ();
 			if (newCommand.Initialize (this)) {
+				newCommand.OnStart ();
 				CurrentCmd = newCommand;
 			}
 		}
@@ -47,22 +58,68 @@ public class PlayerController : CommandController {
 		if(Input.GetAxis("Alt Fire") == 1) {
 			Command newCommand = new KickCommand ();
 			if (newCommand.Initialize (this)) {
+				newCommand.OnStart ();
 				CurrentCmd = newCommand;
 			}
 		}
-		float horizontalInput = Input.GetAxis ("Horizontal");
-		MoveCont.AddMovementInput (new Vector3(horizontalInput,0,0));
 
-		float verticalInput = Input.GetAxis ("Vertical");
-		MoveCont.AddMovementInput (new Vector3(0,0,verticalInput));
+		if (Input.GetKey (KeyCode.Space)) {
+			if (State == CHAR_STATE.NEUTRAL) {
+				ChangeState (CHAR_STATE.BLOCKING);
+			}
+		}
+		else {
+			if (State == CHAR_STATE.BLOCKING) {
+				ChangeState (CHAR_STATE.NEUTRAL);
+			}
+		}
 
-		float roll = - Input.GetAxis ("Mouse Y");
-		playerCamera.transform.rotation = playerCamera.transform.rotation * Quaternion.Euler (roll,0,0);
+		//if (Input.GetKeyUp (KeyCode.Space)) {
+			
+		//}
 
-		float pitch = Input.GetAxis("Mouse X");
-		MoveCont.AddRotationInput (Quaternion.Euler(0,pitch,0));
+		if(CanMove) {
+			float horizontalInput = Input.GetAxis ("Horizontal");
+			MoveCont.AddMovementInput (new Vector3(horizontalInput,0,0));
 
+			float verticalInput = Input.GetAxis ("Vertical");
+			MoveCont.AddMovementInput (new Vector3(0,0,verticalInput));
+
+			float roll = - Input.GetAxis ("Mouse Y");
+			playerCamera.transform.rotation = playerCamera.transform.rotation * Quaternion.Euler (roll,0,0);
+
+			float pitch = Input.GetAxis("Mouse X");
+			MoveCont.AddRotationInput (Quaternion.Euler(0,pitch,0));
+		}
+
+		if (Input.GetKey (KeyCode.Escape)) {
+			Application.Quit ();
+		}
 	}
 
+	/*
+	public override void Hurt (float damage, Vector3 impact)
+	{
+		
+	}
+	*/
+	public override void Hurt (float damage, Vector3 impact)
+	{
+		base.Hurt (damage, impact);
+		Debug.DrawRay (transform.position, Vector3.up, Color.green);
+		if (State == CHAR_STATE.NEUTRAL || State == CHAR_STATE.HIT_STUN)
+			health -= damage;
+	}
+
+	/*
+	protected override void TickHitStun () {
+		if (StateFrame > 30) {
+			ChangeState (CHAR_STATE.NEUTRAL);
+			return;
+		}
+		//Debug.Log (StateFrame);
+		MoveCont.AddMovementInput (Vector3.back / 2);
+	}
+	*/
 
 }

@@ -112,7 +112,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 457d8a0aa74e27546a503f9026b4be79, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  state: 0
 --- !u!114 &114967065068135924
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -124,7 +123,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7956c06f041c4848967d4879590d67c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxMoveSpeed: 2
+  maxMoveSpeed: 5
   gravity: -10
   maxWalkableSlope: 60
 --- !u!136 &136512568615950960

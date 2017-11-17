@@ -13,28 +13,27 @@ namespace CommandSpace
 		 * STOP states rely on the delegate function to tell them when to progress to the next state.
 		 * TERM states are like auto, but instead of transitioning to a new state they terminate the command after the perscibed frames.
 		 */
-		public enum STATE_TYPE { STOP,  AUTO, TERM };
+		public enum STATE_TYPE { STOP, AUTO, TERM };
 		public STATE_TYPE stateType;
 		public int frameLength;
 		public int nextState;
 
 
+		//public 
 
 		public StateFunction stateFunction;
 
 		// A reference to the created object is kept so that it can be destroid latter.
 		GameObject commandGameObject;
 		public GameObject CommandGameObject{ 
-			get{
-				return commandGameObject;
-			} 
+			get{ return commandGameObject; } 
 		}
 
 		// Array of stateBoxes that defines the hit/hurt/other boxes of this current state. 
-		//public StateBox[] stateBoxArray;
+		// public StateBox[] stateBoxArray;
 		Hashtable boxHashtable;
 
-		public CommandState(int inFrameLength, int inNextState, StateFunction inFunction, bool bTerm = false) {
+		public CommandState( int inFrameLength, int inNextState, StateFunction inFunction, bool bTerm = false) {
 			stateType = STATE_TYPE.AUTO;
 			if (bTerm)
 				stateType = STATE_TYPE.TERM;
@@ -44,21 +43,18 @@ namespace CommandSpace
 			stateFunction = inFunction;
 			commandGameObject = null;
 			boxHashtable = new Hashtable ();
-			//stateBoxArray = null;
 		}
-		public CommandState(StateFunction inFunction) {
+
+		public CommandState( StateFunction inFunction) {
 			stateType = STATE_TYPE.STOP;
 			frameLength = 0;
 			nextState = 0;
 			stateFunction = inFunction;
 			commandGameObject = null;
 			boxHashtable = new Hashtable ();
-
-			//stateBoxArray = null;
-
 		}
 
-		public CommandState(int inFrameLength, int inNextState, bool bTerm = false) {
+		public CommandState( int inFrameLength, int inNextState, bool bTerm = false) {
 			stateType = STATE_TYPE.AUTO;
 			if (bTerm)
 				stateType = STATE_TYPE.TERM;
@@ -68,12 +64,11 @@ namespace CommandSpace
 			stateFunction = null;
 			commandGameObject = null;
 			boxHashtable = new Hashtable ();
-			//stateBoxArray = null;
 		}
-
-
+			
 
 		public void AddBox(StateBox inBox) {
+			inBox.State = this;
 			boxHashtable.Add (inBox.tag, inBox);
 		}
 
@@ -98,6 +93,18 @@ namespace CommandSpace
 				stateObject.transform.SetParent (returnObject.transform);
 				stateObject.transform.localPosition = ((StateBox)entry.Value).LocalPosition;
 				stateObject.transform.localRotation = ((StateBox)entry.Value).LocalRotation;
+
+				/*
+				Collider collider = stateObject.GetComponent<Collider> ();
+				if (collider != null) {
+					Collider[] childColliders = owner.GetComponentsInChildren<Collider> ();
+
+					for (int index = 0; index < childColliders.Length; index++) {
+						
+						Physics.IgnoreCollision(collider, childColliders[index]);
+					}
+				}
+				*/
 			}
 				
 			commandGameObject = returnObject;
@@ -116,6 +123,11 @@ namespace CommandSpace
 	public abstract class StateBox {
 		public string tag;
 
+		private CommandState state;
+		public CommandState State {
+			get { return state; }
+			set { state = value;}
+		}
 		// Position of the Box in relation to the player and the player's rotation
 		private Vector3 localPosition;
 		public Vector3 LocalPosition { 
@@ -139,10 +151,9 @@ namespace CommandSpace
 		public GameObject CreateGameObject() {
 			GameObject returnObject = (GameObject) GameObject.Instantiate (Resources.Load("HitBox"));
 			returnObject.GetComponent<TriggerPasser> ().DestinationStateBox = this;
-			//UnityEngine.Debug.Log ("size: " + size);
-			returnObject.GetComponent<BoxCollider> ().size = size;
-			//UnityEngine.Debug.Log ("boxsize: " + returnObject.GetComponent<BoxCollider> ().size); 
 
+			returnObject.GetComponent<BoxCollider> ().size = size;
+			 
 			return returnObject;
 		}
 	}
@@ -159,7 +170,7 @@ namespace CommandSpace
 			damage = inDamage;
 
 		}
-		public HitBox(Vector3 inLocalPosition, Vector3 inSize, String inTag, float inDamage) {
+		public HitBox( Vector3 inLocalPosition, Vector3 inSize, String inTag, float inDamage) {
 			LocalPosition = inLocalPosition;
 			LocalRotation = Quaternion.identity;
 			Size = inSize;
@@ -171,11 +182,13 @@ namespace CommandSpace
 		public override void OnTrigger(Collider hit) {
 			UnityEngine.Debug.Log ("HitBoxHit");
 			PawnController enemyController = hit.gameObject.GetComponent<PawnController> ();
+			//if(enemyController.gameObject == State.)
+
 			if (enemyController == null) {
 				return;
 			}
 
-			enemyController.Hurt (10, Vector3.zero);
+			enemyController.Hurt (damage, Vector3.zero);
 
 		}
 	}
@@ -188,6 +201,7 @@ namespace CommandSpace
 		protected CommandController owner;
 		public CommandController Owner {
 			get {
+				
 				return owner;
 			}
 		}
@@ -201,12 +215,12 @@ namespace CommandSpace
 		private int stateFrames = 0;
 
 		private int currentState = 0;
+
 		public int CurrentState {
 			get { 
 				return currentState;
 			}
 			set {
-				
 				cmdStates [currentState].DestroyGameObject ();
 				stateFrames = 0;
 				currentState = value;
@@ -220,6 +234,7 @@ namespace CommandSpace
 			return CanCommandExecute ();
 		}
 
+		public virtual void OnStart() {}
 
 		public abstract bool CanCommandExecute ();
 
@@ -235,6 +250,16 @@ namespace CommandSpace
 					stateObject.transform.SetParent (Owner.transform);
 					stateObject.transform.localPosition = new Vector3 (0, 0, 0);
 					stateObject.transform.localRotation = Quaternion.identity;
+					Collider[] stateColliders = stateObject.GetComponentsInChildren<Collider> ();
+					Collider[] ownerColliders = Owner.gameObject.GetComponentsInChildren<Collider> ();
+					for (int index0 = 0; index0 < stateColliders.Length; index0++) {
+					
+						for (int index1 = 0; index1 < ownerColliders.Length; index1++) {
+							Physics.IgnoreCollision (stateColliders [index0], ownerColliders [index1]);
+						}
+					}
+
+
 					//Physics.IgnoreCollision (owner.gameObject,stateObject, true);
 				}
 					
@@ -261,8 +286,10 @@ namespace CommandSpace
 
 		public void Terminate() {
 			bTerminated = true;
+			OnTerminate ();
 		}
 
+		protected virtual void OnTerminate() {}
 
 		public bool IsTerminated() {
 			return bTerminated;
@@ -278,7 +305,7 @@ namespace CommandSpace
 			cmdStates [1] = new CommandState (4, 2);
 			cmdStates [1].AddBox (new HitBox(new Vector3(0,0,1.5f), new Vector3(2,1,2),"1",20));
 			cmdStates [2] = new CommandState (11, -1, true);
-			//cmdSt
+
 
 		}
 		public override bool CanCommandExecute ()
@@ -295,6 +322,58 @@ namespace CommandSpace
 					return false;
 				}
 			}
+			return true;
+		}
+	}
+
+	public class LongPoke : Command {
+		static float range = 6;
+
+		public LongPoke() {
+			commandID = "LongPoke";
+			cmdStates = new CommandState[3];
+			//Startup
+			cmdStates[0] = new CommandState(9,1);
+
+			//Active
+			cmdStates[1] = new CommandState(4,2, WhipCommand.drawWhip);
+			cmdStates [1].AddBox (new HitBox(new Vector3(0,0,range / 2),new Vector3(1,1,range),"pokeBox",10));
+
+			//Recovery 14
+			cmdStates [2] = new CommandState (30, -1, true);
+		}
+
+		public override void OnStart ()
+		{
+			Owner.CanMove = false;
+		}
+
+		protected override void OnTerminate ()
+		{
+			Owner.CanMove = true;
+		}
+		/*
+		static void Start(CommandState state, Command command, int stateFrame, int commandFrame) {
+			command.Owner.CanMove = false;
+		}
+
+		static void End(CommandState state, Command command, int stateFrame, int commandFrame) {
+			command.Owner.CanMove = true;
+		}
+		*/
+
+		public override bool CanCommandExecute() {
+			if (Owner.CurrentCmd == null) {
+				return true;
+			}
+
+			switch (Owner.CurrentCmd.commandID) {
+			case "LongPoke":
+				return false;
+			case "Kick":
+				return false;
+			}
+
 			return true;
 		}
 	}
@@ -322,7 +401,7 @@ namespace CommandSpace
 			cmdStates [4].CopyOverBoxes (cmdStates[3]);
 			cmdStates [4].AddBox (new HitBox(new Vector3(0,0,3),Quaternion.identity,new Vector3(1,1, 1),"4",10));
 
-			cmdStates [5] = new CommandState (2, 6,drawWhip);
+			cmdStates [5] = new CommandState ( 2, 6,drawWhip);
 			cmdStates [5].CopyOverBoxes (cmdStates[4]);
 			cmdStates [5].AddBox (new HitBox(new Vector3(0,0,4),Quaternion.identity,new Vector3(1,1,1),"5",10));
 
@@ -344,7 +423,7 @@ namespace CommandSpace
 			return true;
 		}
 
-		static void drawWhip(CommandState state, Command command, int stateFrame, int commandFrame) {
+		 public static void drawWhip(CommandState state, Command command, int stateFrame, int commandFrame) {
 			Debug.DrawLine (command.Owner.transform.position, command.Owner.transform.position + command.Owner.transform.rotation * new Vector3 (0, 0, 5.5f), Color.red);
 		}
 
