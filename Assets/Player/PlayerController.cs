@@ -8,6 +8,7 @@ public class PlayerController : CommandController {
 
 	//MovementController moveCont;
 	Camera playerCamera;
+	Animator animator;
 	//Command[] playerCommands;
 
 	void Awake() {
@@ -22,6 +23,8 @@ public class PlayerController : CommandController {
 		MoveCont.CastLayerMask = MoveCont.CastLayerMask | 1 << 10;
 		MoveCont.CastLayerMask = MoveCont.CastLayerMask | 1 << 11;
 		MoveCont.CastLayerMask = ~ MoveCont.CastLayerMask;
+
+		animator = GetComponent<Animator> ();
 	}
 	
 
@@ -52,6 +55,7 @@ public class PlayerController : CommandController {
 			if (newCommand.Initialize (this)) {
 				newCommand.OnStart ();
 				CurrentCmd = newCommand;
+				animator.SetTrigger ("Shoot");
 			}
 		}
 

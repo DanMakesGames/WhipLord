@@ -5,6 +5,7 @@ using CommandSpace;
 
 public class TriggerPasser : MonoBehaviour {
 	// Destination SateBox. The destination of the Trigger event pass.
+	public bool visualDebug;
 	private StateBox destinationStateBox;
 	public StateBox DestinationStateBox { 
 
@@ -12,7 +13,12 @@ public class TriggerPasser : MonoBehaviour {
 		set{ destinationStateBox = value; } 
 	
 	}
-		
+
+	void Awake () {
+		BoxCollider collider = GetComponent<BoxCollider> ();
+
+	}
+
 	void OnTriggerEnter(Collider hit) {
 		//Debug.Log ("logey");
 		destinationStateBox.OnTrigger (hit);

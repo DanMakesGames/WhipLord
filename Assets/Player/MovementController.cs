@@ -50,9 +50,11 @@ public class MovementController : MonoBehaviour {
 		set { castLayerMask = value;}
 	}
 
+	Animator animator;
 
 	// Current player velocities.
 	private Vector3 velocity;
+	public Vector3 oldVelocity;
 	private Quaternion rotVelocity;
 
 	// This stores the desired movement input. Zeroed at end of every tick. Keep in mind that this is realtive to the player space.
@@ -88,6 +90,8 @@ public class MovementController : MonoBehaviour {
 		collisionBody = GetComponent<CapsuleCollider> ();
 		moveState = MOVE_STATE.FALLING;
 
+		animator = GetComponent<Animator> ();
+
 		bIgnoreInitPenetration = false;
 		//castLayerMask = ~0;
 		//castLayerMask = 1 << 8;
@@ -111,9 +115,17 @@ public class MovementController : MonoBehaviour {
 
 		if(moveState != MOVE_STATE.HALTED)
 			PerformMovement ();
+
+		UpdateAnimation ();
 	}
 
-
+	void UpdateAnimation(){
+		if (animator != null) {
+			Debug.Log ("asdfa");
+			animator.SetFloat ("forward", oldVelocity.magnitude);
+		}
+	}
+	
 	/**
 	 * <summary>
 	 * Method that is the head of all movement logic. Calling this each update what moves the player.
@@ -185,7 +197,7 @@ public class MovementController : MonoBehaviour {
 			}
 
 		}
-
+		oldVelocity = velocity;
 
 		//Peform Ground Check and update ground state
 		if (moveState == MOVE_STATE.WALKING) {
@@ -225,6 +237,7 @@ public class MovementController : MonoBehaviour {
 				moveState = MOVE_STATE.FALLING;
 			}
 			else {
+				
 				velocity = Vector3.zero;
 			}
 		}
