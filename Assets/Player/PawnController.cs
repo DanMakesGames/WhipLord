@@ -6,6 +6,7 @@ using UnityEngine;
 /**
  * This is the head of what a Pawn is. They have a Movement Controller, and update funcation. IN the future they will have 
  * health and damage. Basically this is some sort of Enemy, Player, AI beinging that is a person or creature in the world.
+ * 
  */
 public abstract class PawnController : MonoBehaviour
 {

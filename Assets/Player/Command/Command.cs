@@ -94,17 +94,6 @@ namespace CommandSpace
 				stateObject.transform.localPosition = ((StateBox)entry.Value).LocalPosition;
 				stateObject.transform.localRotation = ((StateBox)entry.Value).LocalRotation;
 
-				/*
-				Collider collider = stateObject.GetComponent<Collider> ();
-				if (collider != null) {
-					Collider[] childColliders = owner.GetComponentsInChildren<Collider> ();
-
-					for (int index = 0; index < childColliders.Length; index++) {
-						
-						Physics.IgnoreCollision(collider, childColliders[index]);
-					}
-				}
-				*/
 			}
 				
 			commandGameObject = returnObject;
@@ -346,6 +335,10 @@ namespace CommandSpace
 		public override void OnStart ()
 		{
 			Owner.CanMove = false;
+			Animator anim = Owner.GetComponent<Animator> ();
+			if (anim != null) {
+				anim.SetTrigger ("Whip");
+			}
 		}
 
 		protected override void OnTerminate ()

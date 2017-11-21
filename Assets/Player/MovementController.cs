@@ -122,7 +122,23 @@ public class MovementController : MonoBehaviour {
 	void UpdateAnimation(){
 		if (animator != null) {
 			Debug.Log ("asdfa");
-			animator.SetFloat ("forward", oldVelocity.magnitude);
+			if (oldVelocity.magnitude > 0) {
+				animator.SetBool ("WalkForward", true);
+				Vector3 velocityHeading = oldVelocity;
+				velocityHeading.y = 0;
+				Vector3 heading = Quaternion.Inverse (transform.rotation) * velocityHeading;
+
+				float finalHeading = Vector3.Dot (heading.normalized, Vector3.right) * 0.5f + 0.5f;
+				//Vector3 rot = transform.rotation.eulerAngles;
+				//Quaternion headRot = Quaternion.Euler (new Vector3 (0, rot.y, 0));
+
+				//float heading = Mathf.Sin (rot.y) * 0.5f + 0.5f;
+
+				animator.SetFloat ("Heading", finalHeading);
+
+			}
+			else
+				animator.SetBool ("WalkForward", false);
 		}
 	}
 	

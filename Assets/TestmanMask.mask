@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!319 &31900000
+AvatarMask:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: TestmanMask
+  m_Mask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+  m_Elements:
+  - m_Path: 
+    m_Weight: 1
+  - m_Path: Armature
+    m_Weight: 1
+  - m_Path: Armature/Bone
+    m_Weight: 1
+  - m_Path: Armature/Bone/Bottom_body
+    m_Weight: 1
+  - m_Path: Armature/Bone/Bottom_body/left_hip
+    m_Weight: 1
+  - m_Path: Armature/Bone/Bottom_body/left_hip/left_upper_leg
+    m_Weight: 1
+  - m_Path: Armature/Bone/Bottom_body/left_hip/left_upper_leg/left_lower_leg
+    m_Weight: 1
+  - m_Path: Armature/Bone/Bottom_body/right_hip
+    m_Weight: 1
+  - m_Path: Armature/Bone/Bottom_body/right_hip/right_upper_leg
+    m_Weight: 1
+  - m_Path: Armature/Bone/Bottom_body/right_hip/right_upper_leg/right_lower_leg
+    m_Weight: 1
+  - m_Path: Armature/Bone/TopBody
+    m_Weight: 0
+  - m_Path: Armature/Bone/TopBody/chest
+    m_Weight: 0
+  - m_Path: Armature/Bone/TopBody/chest/head
+    m_Weight: 0
+  - m_Path: Armature/Bone/TopBody/chest/left_shoulder
+    m_Weight: 0
+  - m_Path: Armature/Bone/TopBody/chest/left_shoulder/left_upper_arm
+    m_Weight: 0
+  - m_Path: Armature/Bone/TopBody/chest/left_shoulder/left_upper_arm/left_lower_arm
+    m_Weight: 0
+  - m_Path: Armature/Bone/TopBody/chest/left_shoulder/left_upper_arm/left_lower_arm/left_hand
+    m_Weight: 0
+  - m_Path: Armature/Bone/TopBody/chest/right_shoulder
+    m_Weight: 0
+  - m_Path: Armature/Bone/TopBody/chest/right_shoulder/right_upper_arm
+    m_Weight: 0
+  - m_Path: Armature/Bone/TopBody/chest/right_shoulder/right_upper_arm/right_lower_arm
+    m_Weight: 0
+  - m_Path: Armature/Bone/TopBody/chest/right_shoulder/right_upper_arm/right_lower_arm/right_hand
+    m_Weight: 0
+  - m_Path: Cube_001
+    m_Weight: 1
+  - m_Path: Cube_002
+    m_Weight: 1
+  - m_Path: Cube_003
+    m_Weight: 1
+  - m_Path: Cube_004
+    m_Weight: 1
+  - m_Path: Cube_005
+    m_Weight: 1
+  - m_Path: Cube_006
+    m_Weight: 1
+  - m_Path: Cube_007
+    m_Weight: 1
+  - m_Path: Cube_008
+    m_Weight: 1
+  - m_Path: Cube_009
+    m_Weight: 1
+  - m_Path: Cube_010
+    m_Weight: 1
+  - m_Path: Cube_011
+    m_Weight: 1
+  - m_Path: Cube_012
+    m_Weight: 1
+  - m_Path: Cube_013
+    m_Weight: 1
+  - m_Path: Cube_014
+    m_Weight: 1
+  - m_Path: Cube_015
+    m_Weight: 1

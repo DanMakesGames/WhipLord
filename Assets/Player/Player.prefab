@@ -56,7 +56,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1058705541852854}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -3.52}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4229805998955114}
@@ -117,7 +117,7 @@ MeshRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1662336466926020}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -175,8 +175,8 @@ Animator:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1662336466926020}
   m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: 7982ea5daaeece84d9cd28534bb6dc87, type: 3}
-  m_Controller: {fileID: 9100000, guid: 579f00f5b95021548a17b458e0901acb, type: 2}
+  m_Avatar: {fileID: 9000000, guid: 8b554dfa84353d441b38bbcf3fe7420d, type: 3}
+  m_Controller: {fileID: 9100000, guid: f42597e9b544d64439854fb1ae4081b3, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -195,9 +195,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7956c06f041c4848967d4879590d67c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxMoveSpeed: 5
+  maxMoveSpeed: 4
   gravity: -150
   maxWalkableSlope: 60
+  oldVelocity: {x: 0, y: 0, z: 0}
 --- !u!114 &114661485987918348
 MonoBehaviour:
   m_ObjectHideFlags: 1
