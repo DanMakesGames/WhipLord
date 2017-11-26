@@ -325,7 +325,7 @@ namespace CommandSpace
 			cmdStates[0] = new CommandState(9,1);
 
 			//Active
-			cmdStates[1] = new CommandState(4,2, WhipCommand.drawWhip);
+			cmdStates[1] = new CommandState(4,2);
 			cmdStates [1].AddBox (new HitBox(new Vector3(0,0,range / 2),new Vector3(1,1,range),"pokeBox",10));
 
 			//Recovery 14
@@ -344,6 +344,10 @@ namespace CommandSpace
 		protected override void OnTerminate ()
 		{
 			Owner.CanMove = true;
+		}
+
+		static void DrawWhip(CommandState state, Command command, int startFrame, int commandFrame) {
+			
 		}
 		/*
 		static void Start(CommandState state, Command command, int stateFrame, int commandFrame) {
