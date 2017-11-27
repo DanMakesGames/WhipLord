@@ -12,15 +12,21 @@ public class MindlessEnemy : CommandController {
 	const float maxOutBoxRange = 10;
 	const float minOutBoxrange = 6;
 
+	const float minDistToRopes = 8;
+	const float escapeAngle = 120;
 
 
-	enum AI_STATE { APPROACH, RETREAT, OUTBOX, MOVE_IN_ATTACK, MOVE_IN_FAKE_OUT, MOVE_IN_FAKE_OUT_R, ATTACK}
+	enum AI_STATE { APPROACH, RETREAT, OUTBOX, MOVE_IN_ATTACK, MOVE_IN_FAKE_OUT, MOVE_IN_FAKE_OUT_R, ATTACK, STRAFE_ESCAPE}
 
 
 	AI_STATE AIState = AI_STATE.APPROACH;
 	float timeTillNextAction;
 	float timePassed = 0;
 	AI_STATE nextAction;
+
+	int strafeDir = 0;
+	Vector3 center;
+	Vector3 startOffset;
 
 	//Random random;
 
@@ -81,6 +87,24 @@ public class MindlessEnemy : CommandController {
 				if ((player.transform.position - transform.position).magnitude > (maxOutBoxRange + minOutBoxrange) / 2) {
 					AIState = AI_STATE.OUTBOX;
 				} 
+				else if (transform.position.x > (20 - minDistToRopes)) {
+					if (transform.position.z >= 0) {
+						strafeDir = 1;
+					} else
+						strafeDir = -1;
+					AIState = AI_STATE.STRAFE_ESCAPE;
+					center = player.transform.position;
+					startOffset = transform.position - center;
+				}
+				else if (transform.position.x < (-20 + minDistToRopes)) {
+					if (transform.position.z >= 0) {
+						strafeDir = -1;
+					} else
+						strafeDir = 1;
+					AIState = AI_STATE.STRAFE_ESCAPE;
+					center = player.transform.position;
+					startOffset = transform.position - center;
+				}
 				else {
 					if (CanMove) {
 						heading = Quaternion.Inverse (transform.rotation) * heading;
@@ -101,18 +125,43 @@ public class MindlessEnemy : CommandController {
 					AIState = AI_STATE.RETREAT;
 					timeTillNextAction = -1;
 
-				} else {
+				} 
+				else if (transform.position.x > (20 - minDistToRopes)) {
+					if (transform.position.z >= 0) {
+						strafeDir = 1;
+					} else
+						strafeDir = -1;
+					AIState = AI_STATE.STRAFE_ESCAPE;
+					center = player.transform.position;
+					startOffset = transform.position - center;
+				}
+				else if (transform.position.x < (-20 + minDistToRopes)) {
+					if (transform.position.z >= 0) {
+						strafeDir = -1;
+					} else
+						strafeDir = 1;
+					AIState = AI_STATE.STRAFE_ESCAPE;
+					center = player.transform.position;
+					startOffset = transform.position - center;
+				}
+
+				else {
 					// pick next action to do and when to do it
+					//MoveCont.AddMovementInput(new Vector3(1,0,0));
+
 					if (timeTillNextAction == -1) {
 						
-						timeTillNextAction = 5 * Random.value;
+						timeTillNextAction = 2f * Random.value;
 						timePassed = 0;
 
+						/*
 						if (Random.value > 0.7f) {
 							nextAction = AI_STATE.MOVE_IN_FAKE_OUT;
 						} else {
 							nextAction = AI_STATE.MOVE_IN_ATTACK;
 						}
+						*/
+						nextAction = AI_STATE.MOVE_IN_ATTACK;
 					}
 					if(timePassed > timeTillNextAction){
 						Debug.Log ("NextAction");
@@ -127,10 +176,29 @@ public class MindlessEnemy : CommandController {
 						if (newCmd.Initialize (this)) {
 							newCmd.OnStart ();
 							CurrentCmd = newCmd;
-							//AIState = AI_STATE.RETREAT;
 						}
 					}
 					timePassed += Time.deltaTime;
+				}
+			
+			}
+
+
+			if (AIState == AI_STATE.STRAFE_ESCAPE) {
+				if (Vector3.Angle (startOffset, transform.position - player.transform.position) > escapeAngle) {
+					AIState = AI_STATE.OUTBOX;
+				} else {
+					if (CanMove) {
+						MoveCont.AddMovementInput (Vector3.right * strafeDir);
+					}
+					if ((player.transform.position - transform.position).magnitude < 6) {
+
+						Command newCmd = new LongPoke ();
+						if (newCmd.Initialize (this)) {
+							newCmd.OnStart ();
+							CurrentCmd = newCmd;
+						}
+					}
 				}
 			
 			}

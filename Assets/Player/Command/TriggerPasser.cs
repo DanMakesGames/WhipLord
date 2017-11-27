@@ -21,6 +21,11 @@ public class TriggerPasser : MonoBehaviour {
 
 	void OnTriggerEnter(Collider hit) {
 		//Debug.Log ("logey");
+		AudioSource hitSound = GetComponent<AudioSource>();
+		if (hitSound != null) {
+			hitSound.Play ();
+		}
+
 		destinationStateBox.OnTrigger (hit);
 	}
 }

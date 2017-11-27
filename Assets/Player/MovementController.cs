@@ -128,13 +128,16 @@ public class MovementController : MonoBehaviour {
 				velocityHeading.y = 0;
 				Vector3 heading = Quaternion.Inverse (transform.rotation) * velocityHeading;
 
-				float finalHeading = Vector3.Dot (heading.normalized, Vector3.right) * 0.5f + 0.5f;
+				float finalHeading = Vector3.Dot (heading.normalized, Vector3.right) * 0.5f ;
+				if(Vector3.Dot(heading.normalized,Vector3.forward) < -0.1) {
+				finalHeading = -finalHeading;
+				}
 				//Vector3 rot = transform.rotation.eulerAngles;
 				//Quaternion headRot = Quaternion.Euler (new Vector3 (0, rot.y, 0));
 
 				//float heading = Mathf.Sin (rot.y) * 0.5f + 0.5f;
 
-				animator.SetFloat ("Heading", finalHeading);
+				animator.SetFloat ("Heading", finalHeading + 0.5f);
 
 			}
 			else

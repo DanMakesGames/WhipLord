@@ -59,13 +59,7 @@ public class PlayerController : CommandController {
 			}
 		}
 
-		if(Input.GetAxis("Alt Fire") == 1) {
-			Command newCommand = new KickCommand ();
-			if (newCommand.Initialize (this)) {
-				newCommand.OnStart ();
-				CurrentCmd = newCommand;
-			}
-		}
+
 
 		if (Input.GetKey (KeyCode.Space)) {
 			if (State == CHAR_STATE.NEUTRAL) {

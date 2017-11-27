@@ -19,7 +19,8 @@ namespace CommandSpace
 		public int nextState;
 
 
-		//public 
+
+		public AudioClip hitSound; 
 
 		public StateFunction stateFunction;
 
@@ -29,11 +30,25 @@ namespace CommandSpace
 			get{ return commandGameObject; } 
 		}
 
+		// List of enemies we have already hit so far. This is used to ignore actors so one move doesnt hit more than once.
+		LinkedList<GameObject> alreadyHit;
+		public bool ShouldHit(GameObject obj) {
+			if (alreadyHit.Find (obj) != null)
+				return false;
+			return true;
+		}
+		public void AddAlreadyHit(GameObject obj) {
+			alreadyHit.AddFirst (obj);
+		}
+		public void ClearAlreadyHit(){
+			alreadyHit.Clear ();
+		}
+
 		// Array of stateBoxes that defines the hit/hurt/other boxes of this current state. 
 		// public StateBox[] stateBoxArray;
 		Hashtable boxHashtable;
 
-		public CommandState( int inFrameLength, int inNextState, StateFunction inFunction, bool bTerm = false) {
+		public CommandState( int inFrameLength, int inNextState, StateFunction inFunction, string inSoundName = null, bool bTerm = false) {
 			stateType = STATE_TYPE.AUTO;
 			if (bTerm)
 				stateType = STATE_TYPE.TERM;
@@ -43,18 +58,28 @@ namespace CommandSpace
 			stateFunction = inFunction;
 			commandGameObject = null;
 			boxHashtable = new Hashtable ();
+			alreadyHit = new LinkedList<GameObject> ();
+			if (inSoundName != null) {
+				hitSound = Resources.Load<AudioClip> (inSoundName);
+			} else
+				hitSound = null;
 		}
 
-		public CommandState( StateFunction inFunction) {
+		public CommandState( StateFunction inFunction, string inSoundName = null) {
 			stateType = STATE_TYPE.STOP;
 			frameLength = 0;
 			nextState = 0;
 			stateFunction = inFunction;
 			commandGameObject = null;
 			boxHashtable = new Hashtable ();
+			alreadyHit = new LinkedList<GameObject> ();
+			if (inSoundName != null) {
+				hitSound = Resources.Load<AudioClip> (inSoundName);
+			} else
+				hitSound = null;
 		}
 
-		public CommandState( int inFrameLength, int inNextState, bool bTerm = false) {
+		public CommandState( int inFrameLength, int inNextState, string inSoundName = null, bool bTerm = false) {
 			stateType = STATE_TYPE.AUTO;
 			if (bTerm)
 				stateType = STATE_TYPE.TERM;
@@ -64,6 +89,12 @@ namespace CommandSpace
 			stateFunction = null;
 			commandGameObject = null;
 			boxHashtable = new Hashtable ();
+			alreadyHit = new LinkedList<GameObject> ();
+			if (inSoundName != null) {
+				hitSound = Resources.Load<AudioClip> (inSoundName);
+			} else
+				hitSound = null;
+
 		}
 			
 
@@ -169,7 +200,9 @@ namespace CommandSpace
 		}
 
 		public override void OnTrigger(Collider hit) {
-			UnityEngine.Debug.Log ("HitBoxHit");
+			if (!State.ShouldHit (hit.gameObject)) {
+				return;
+			}
 			PawnController enemyController = hit.gameObject.GetComponent<PawnController> ();
 			//if(enemyController.gameObject == State.)
 
@@ -177,7 +210,10 @@ namespace CommandSpace
 				return;
 			}
 
+			GameObject soundObject = GameObject.Instantiate (Resources.Load<GameObject> ("SoundObject"), hit.transform.position, hit.transform.rotation);
+			soundObject.GetComponent<AudioSource> ().clip = State.hitSound;
 			enemyController.Hurt (damage, Vector3.zero);
+			State.AddAlreadyHit (hit.gameObject);
 
 		}
 	}
@@ -187,6 +223,7 @@ namespace CommandSpace
 	{
 		public string commandID = "none";
 		protected CommandState[] cmdStates;
+
 		protected CommandController owner;
 		public CommandController Owner {
 			get {
@@ -204,7 +241,6 @@ namespace CommandSpace
 		private int stateFrames = 0;
 
 		private int currentState = 0;
-
 		public int CurrentState {
 			get { 
 				return currentState;
@@ -216,10 +252,17 @@ namespace CommandSpace
 			}
 		}
 
+		protected string hitSoundName;
+
+		//For any sort of hitting action defer to this sound.
+		AudioClip hitSound;
+
+
 		public bool Initialize(CommandController inOwner) {
 			if (owner == null) {
 				owner = inOwner;
 			}
+
 			return CanCommandExecute ();
 		}
 
@@ -285,35 +328,6 @@ namespace CommandSpace
 		}
 	}
 
-	public class KickCommand : Command {
-		
-		public KickCommand() {
-			commandID = "Kick";
-			cmdStates = new CommandState[3];
-			cmdStates [0] = new CommandState (4, 1);
-			cmdStates [1] = new CommandState (4, 2);
-			cmdStates [1].AddBox (new HitBox(new Vector3(0,0,1.5f), new Vector3(2,1,2),"1",20));
-			cmdStates [2] = new CommandState (11, -1, true);
-
-
-		}
-		public override bool CanCommandExecute ()
-		{
-			
-			if (Owner.CurrentCmd != null) {
-				if (Owner.CurrentCmd.commandID.Equals ("Whip") ) {
-					if(Owner.CurrentCmd.CurrentState == 7)
-						return true;
-					else
-						return false;
-				} 
-				if (Owner.CurrentCmd.commandID.Equals ("Kick")) {
-					return false;
-				}
-			}
-			return true;
-		}
-	}
 
 	public class LongPoke : Command {
 		static float range = 6;
@@ -322,14 +336,15 @@ namespace CommandSpace
 			commandID = "LongPoke";
 			cmdStates = new CommandState[3];
 			//Startup
-			cmdStates[0] = new CommandState(9,1);
+			cmdStates[0] = new CommandState(9, 1);
 
+			//cmdStates [1] = new CommandState (1, 2, WhipSound);
 			//Active
-			cmdStates[1] = new CommandState(4,2);
+			cmdStates[1] = new CommandState(4, 2,"HitSound");
 			cmdStates [1].AddBox (new HitBox(new Vector3(0,0,range / 2),new Vector3(1,1,range),"pokeBox",10));
 
 			//Recovery 14
-			cmdStates [2] = new CommandState (30, -1, true);
+			cmdStates [2] = new CommandState (30, -1,null, true);
 		}
 
 		public override void OnStart ()
@@ -339,6 +354,10 @@ namespace CommandSpace
 			if (anim != null) {
 				anim.SetTrigger ("Whip");
 			}
+			AudioSource makeSound = Owner.GetComponent<AudioSource> ();
+			if( makeSound != null) {
+				makeSound.Play ();
+			}
 		}
 
 		protected override void OnTerminate ()
@@ -346,9 +365,13 @@ namespace CommandSpace
 			Owner.CanMove = true;
 		}
 
-		static void DrawWhip(CommandState state, Command command, int startFrame, int commandFrame) {
-			
+		static void WhipSound(CommandState state, Command command, int stateFrame, int commandFrame) {
+			AudioSource makeSound = command.Owner.GetComponent<AudioSource> ();
+			if( makeSound != null) {
+			//	makeSound.Play ();
+			}
 		}
+
 		/*
 		static void Start(CommandState state, Command command, int stateFrame, int commandFrame) {
 			command.Owner.CanMove = false;
@@ -375,83 +398,8 @@ namespace CommandSpace
 		}
 	}
 
-	public class WhipCommand : Command {
-		
-		public WhipCommand() {
-			commandID = "Whip";
-			cmdStates = new CommandState[8];
-			// Start up
-			cmdStates [0] = new CommandState (10, 1);
 
-			cmdStates [1] = new CommandState (2, 2,drawWhip);
-			cmdStates [1].AddBox (new HitBox(new Vector3(0,0,0),Quaternion.identity,new Vector3(1,1,1),"1",10));
 
-			cmdStates [2] = new CommandState (2, 3, drawWhip);
-			cmdStates [2].CopyOverBoxes (cmdStates[1]);
-			cmdStates [2].AddBox (new HitBox(new Vector3(0,0,1),Quaternion.identity,new Vector3(1,1,1),"2",10));
-
-			cmdStates [3] = new CommandState (2, 4, drawWhip);
-			cmdStates [3].CopyOverBoxes (cmdStates[2]);
-			cmdStates [3].AddBox (new HitBox(new Vector3(0,0,2),Quaternion.identity,new Vector3(1,1,1),"3",10));
-
-			cmdStates [4] = new CommandState (2, 5, drawWhip);
-			cmdStates [4].CopyOverBoxes (cmdStates[3]);
-			cmdStates [4].AddBox (new HitBox(new Vector3(0,0,3),Quaternion.identity,new Vector3(1,1, 1),"4",10));
-
-			cmdStates [5] = new CommandState ( 2, 6,drawWhip);
-			cmdStates [5].CopyOverBoxes (cmdStates[4]);
-			cmdStates [5].AddBox (new HitBox(new Vector3(0,0,4),Quaternion.identity,new Vector3(1,1,1),"5",10));
-
-			cmdStates [6] = new CommandState (2, 7, drawWhip);
-			cmdStates [6].CopyOverBoxes (cmdStates[5]);
-			cmdStates [6].AddBox (new HitBox(new Vector3(0,0,5),Quaternion.identity,new Vector3(1,1,1),"6",10));
-
-			cmdStates [7] = new CommandState (whipEnd);
-		}
-
-		public override bool CanCommandExecute() {
-			if (owner.CurrentCmd != null) {
-				if (owner.CurrentCmd.CurrentState == 7)
-					return true;
-				else
-					return false;
-			}
-
-			return true;
-		}
-
-		 public static void drawWhip(CommandState state, Command command, int stateFrame, int commandFrame) {
-			Debug.DrawLine (command.Owner.transform.position, command.Owner.transform.position + command.Owner.transform.rotation * new Vector3 (0, 0, 5.5f), Color.red);
-		}
-
-		static void whipStartUp(CommandState state, Command command, int stateFrame, int commandFrame) {
-			if ((stateFrame + 1) >= 10) {
-				command.CurrentState = 1;
-				return;
-			}
-			return;
-
-				
-		}
-
-		static void whipActive(CommandState state, Command command, int stateFrame, int commandFrame) {
-			if (stateFrame > 10) {
-				command.CurrentState = 2;
-				return;
-			}
-		}
-		static void whipEnd(CommandState state, Command command, int stateFrame, int commandFrame) {
-			Debug.Log ("IN: " + stateFrame);
-			if (stateFrame > 17) {
-				command.Terminate ();
-				//command.CurrentState = 2;
-				return;
-			}
-			//command.Owner.MoveCont.AddMovementInput (new UnityEngine.Vector3(0,0,-5));
-		}
-
-	}
-		
 
 }
 
