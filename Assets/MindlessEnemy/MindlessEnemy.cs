@@ -5,7 +5,7 @@ using CommandSpace;
 
 
 public class MindlessEnemy : CommandController {
-	float health = 100;
+	
 	GameObject player;
 	CommandController playerCommand;
 
@@ -14,6 +14,12 @@ public class MindlessEnemy : CommandController {
 
 	const float minDistToRopes = 8;
 	const float escapeAngle = 120;
+
+	const int framesBeforeCounter = 13;
+	int framesSinceAttack = 0;
+
+	enum ESCAPE_HOME {NORTH, SOUTH, EAST, WEST};
+	ESCAPE_HOME escHome;
 
 
 	enum AI_STATE { APPROACH, RETREAT, OUTBOX, MOVE_IN_ATTACK, MOVE_IN_FAKE_OUT, MOVE_IN_FAKE_OUT_R, ATTACK, STRAFE_ESCAPE}
@@ -33,7 +39,7 @@ public class MindlessEnemy : CommandController {
 	// Use this for initialization
 	void Start () {
 		player = GameObject.FindGameObjectWithTag ("Player");
-
+		playerCommand = player.GetComponent<CommandController> ();
 			
 			MoveCont = GetComponent<MovementController> ();
 			MoveCont.CastLayerMask = 1 << 9;
@@ -48,7 +54,7 @@ public class MindlessEnemy : CommandController {
 	
 
 	void FixedUpdate () {
-		if(health <= 0)
+		if(getHealth() <= 0)
 		{
 			Destroy (gameObject);
 		}
@@ -87,24 +93,8 @@ public class MindlessEnemy : CommandController {
 				if ((player.transform.position - transform.position).magnitude > (maxOutBoxRange + minOutBoxrange) / 2) {
 					AIState = AI_STATE.OUTBOX;
 				} 
-				else if (transform.position.x > (20 - minDistToRopes)) {
-					if (transform.position.z >= 0) {
-						strafeDir = 1;
-					} else
-						strafeDir = -1;
-					AIState = AI_STATE.STRAFE_ESCAPE;
-					center = player.transform.position;
-					startOffset = transform.position - center;
-				}
-				else if (transform.position.x < (-20 + minDistToRopes)) {
-					if (transform.position.z >= 0) {
-						strafeDir = -1;
-					} else
-						strafeDir = 1;
-					AIState = AI_STATE.STRAFE_ESCAPE;
-					center = player.transform.position;
-					startOffset = transform.position - center;
-				}
+				else if (ShouldEscape ()) {
+				} 
 				else {
 					if (CanMove) {
 						heading = Quaternion.Inverse (transform.rotation) * heading;
@@ -112,6 +102,7 @@ public class MindlessEnemy : CommandController {
 					}
 				}
 			}
+
 
 
 
@@ -126,23 +117,15 @@ public class MindlessEnemy : CommandController {
 					timeTillNextAction = -1;
 
 				} 
-				else if (transform.position.x > (20 - minDistToRopes)) {
-					if (transform.position.z >= 0) {
-						strafeDir = 1;
-					} else
-						strafeDir = -1;
-					AIState = AI_STATE.STRAFE_ESCAPE;
-					center = player.transform.position;
-					startOffset = transform.position - center;
+				else if(playerCommand.getCurrentCommand() == "LongPoke") {
+					framesSinceAttack++;
+					Debug.Log (framesSinceAttack + ": " + playerCommand.getCurrentCommand());
+					if (framesSinceAttack > framesBeforeCounter) {
+						Debug.Log ("DUDE");
+						AIState = AI_STATE.MOVE_IN_ATTACK;
+					}
 				}
-				else if (transform.position.x < (-20 + minDistToRopes)) {
-					if (transform.position.z >= 0) {
-						strafeDir = -1;
-					} else
-						strafeDir = 1;
-					AIState = AI_STATE.STRAFE_ESCAPE;
-					center = player.transform.position;
-					startOffset = transform.position - center;
+				else if (ShouldEscape ()) {
 				}
 
 				else {
@@ -187,7 +170,13 @@ public class MindlessEnemy : CommandController {
 			if (AIState == AI_STATE.STRAFE_ESCAPE) {
 				if (Vector3.Angle (startOffset, transform.position - player.transform.position) > escapeAngle) {
 					AIState = AI_STATE.OUTBOX;
-				} else {
+				} 
+
+
+
+
+				else {
+					ShouldEscape ();
 					if (CanMove) {
 						MoveCont.AddMovementInput (Vector3.right * strafeDir);
 					}
@@ -204,7 +193,7 @@ public class MindlessEnemy : CommandController {
 			}
 
 			if (AIState == AI_STATE.MOVE_IN_FAKE_OUT) {
-				Debug.Log ("BOy");
+				
 				float distFromPlayer = (player.transform.position - transform.position).magnitude;
 
 				if (distFromPlayer < 6) {
@@ -218,6 +207,8 @@ public class MindlessEnemy : CommandController {
 			}
 
 			if (AIState == AI_STATE.MOVE_IN_ATTACK) {
+				Debug.Log ("ATTACKING");
+				framesSinceAttack = 0;
 				float distFromPlayer = (player.transform.position - transform.position).magnitude;
 
 				if (distFromPlayer < 4) {
@@ -263,7 +254,7 @@ public class MindlessEnemy : CommandController {
 	{
 		base.Hurt (damage, impact);
 		if (State == CHAR_STATE.NEUTRAL || State == CHAR_STATE.HIT_STUN)
-			health -= damage;
+			setHealth(getHealth() - damage);
 		Debug.DrawRay (transform.position, Vector3.up, Color.green);
 	}
 
@@ -274,5 +265,55 @@ public class MindlessEnemy : CommandController {
 		AIState = AI_STATE.RETREAT;
 	}
 
+	private bool ShouldEscape() {
+		
+		if (transform.position.x > (20 - minDistToRopes)) {
+			if (player.transform.position.z >= transform.position.z) {
+				strafeDir = -1;
+			} else
+				strafeDir = 1;
+			escHome = ESCAPE_HOME.EAST;
+			AIState = AI_STATE.STRAFE_ESCAPE;
+			center = player.transform.position;
+			startOffset = transform.position - center;
+			return true;
+		}
+		else if (transform.position.x < (-20 + minDistToRopes)) {
+			if (player.transform.position.z >= transform.position.z) {
+				strafeDir = 1;
+			} else
+				strafeDir = -1;
+			escHome = ESCAPE_HOME.WEST;
+			AIState = AI_STATE.STRAFE_ESCAPE;
+			center = player.transform.position;
+			startOffset = transform.position - center;
+			return true;
+		}
 
+		else if (transform.position.z > (20 - minDistToRopes)) {
+			if (player.transform.position.x >= transform.position.x) {
+				strafeDir = 1;
+			} else
+				strafeDir = -1;
+
+			escHome = ESCAPE_HOME.NORTH;
+			AIState = AI_STATE.STRAFE_ESCAPE;
+			center = player.transform.position;
+			startOffset = transform.position - center;
+			return true;
+		}
+		else if (transform.position.z < (-20 + minDistToRopes)) {
+			if (player.transform.position.x >= transform.position.x) {
+				strafeDir = -1;
+			} else
+				strafeDir = 1;
+
+			escHome = ESCAPE_HOME.SOUTH;
+			AIState = AI_STATE.STRAFE_ESCAPE;
+			center = player.transform.position;
+			startOffset = transform.position - center;
+			return true;
+		}
+		return false;
+	}
 }

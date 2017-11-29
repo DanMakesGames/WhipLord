@@ -12,7 +12,23 @@ using CommandSpace;
  */
 public class CommandController : PawnController
 {
+	float health = 100;
+
+	public float getHealth(){
+		return health;
+	}
+	public void setHealth(float inHealth) {
+		health = inHealth;
+	}
+
+
 	private Command currentCmd;
+	public string getCurrentCommand() {
+		if (currentCmd != null)
+			return currentCmd.commandID;
+		else
+			return null;
+	}
 
 	public enum CHAR_STATE
 	{

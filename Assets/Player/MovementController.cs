@@ -121,7 +121,7 @@ public class MovementController : MonoBehaviour {
 
 	void UpdateAnimation(){
 		if (animator != null) {
-			Debug.Log ("asdfa");
+			
 			if (oldVelocity.magnitude > 0) {
 				animator.SetBool ("WalkForward", true);
 				Vector3 velocityHeading = oldVelocity;

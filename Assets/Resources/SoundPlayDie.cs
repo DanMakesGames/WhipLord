@@ -8,6 +8,7 @@ public class SoundPlayDie : MonoBehaviour {
 	void Start () {
 		AudioSource audioSource = GetComponent<AudioSource> ();
 		audioSource.Play ();
+	
 		Destroy (gameObject, audioSource.clip.length);
 	}
 	

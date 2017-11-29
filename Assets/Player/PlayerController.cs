@@ -4,7 +4,7 @@ using UnityEngine;
 using CommandSpace;
 
 public class PlayerController : CommandController {
-	float health = 100;
+	
 
 	//MovementController moveCont;
 	Camera playerCamera;
@@ -34,7 +34,7 @@ public class PlayerController : CommandController {
 	}
 
 	void FixedUpdate() {
-		if(health <= 0)
+		if(getHealth() <= 0)
 		{
 			Application.Quit ();
 			//Destroy (gameObject);
@@ -106,7 +106,7 @@ public class PlayerController : CommandController {
 		base.Hurt (damage, impact);
 		Debug.DrawRay (transform.position, Vector3.up, Color.green);
 		if (State == CHAR_STATE.NEUTRAL || State == CHAR_STATE.HIT_STUN)
-			health -= damage;
+			setHealth (getHealth() - damage);
 	}
 
 	/*

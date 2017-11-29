@@ -90,6 +90,7 @@ namespace CommandSpace
 			commandGameObject = null;
 			boxHashtable = new Hashtable ();
 			alreadyHit = new LinkedList<GameObject> ();
+
 			if (inSoundName != null) {
 				hitSound = Resources.Load<AudioClip> (inSoundName);
 			} else
@@ -211,6 +212,7 @@ namespace CommandSpace
 			}
 
 			GameObject soundObject = GameObject.Instantiate (Resources.Load<GameObject> ("SoundObject"), hit.transform.position, hit.transform.rotation);
+			GameObject.Instantiate (Resources.Load<GameObject> ("HitSpark"), hit.transform.position, hit.transform.rotation);
 			soundObject.GetComponent<AudioSource> ().clip = State.hitSound;
 			enemyController.Hurt (damage, Vector3.zero);
 			State.AddAlreadyHit (hit.gameObject);
