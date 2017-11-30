@@ -10,7 +10,8 @@ public class PlayerController : CommandController {
 	Camera playerCamera;
 	Animator animator;
 	//Command[] playerCommands;
-
+	private bool bPlayerWin = false;
+	private bool bEnemyWin = false;
 	void Awake() {
 		Cursor.lockState = CursorLockMode.Locked;
 	}
@@ -28,17 +29,29 @@ public class PlayerController : CommandController {
 	}
 	
 
-	void Update () {
-		//Debug.Log ("Update: " + Time.deltaTime);
+	void OnGUI () {
+		
+		if(bPlayerWin || bEnemyWin) {
+			Debug.Log ("printing");
+			Texture splashTextrue = null;
+			if (bPlayerWin)
+				splashTextrue = (Texture)Resources.Load ("WinSplash");
+			if (bEnemyWin)
+				splashTextrue = (Texture)Resources.Load ("LoseSplash");
+			Rect splashRect = new Rect (Screen.width / 2 - (splashTextrue.width / 2), (Screen.height / 2) - (splashTextrue.height / 2),splashTextrue.width,splashTextrue.height);
 
+			GUI.DrawTexture (splashRect, splashTextrue);
+		}
 	}
 
 	void FixedUpdate() {
+		/*
 		if(getHealth() <= 0)
 		{
 			Application.Quit ();
 			//Destroy (gameObject);
 		}
+		*/
 
 
 		ProcessInput ();
@@ -94,13 +107,7 @@ public class PlayerController : CommandController {
 			Application.Quit ();
 		}
 	}
-
-	/*
-	public override void Hurt (float damage, Vector3 impact)
-	{
 		
-	}
-	*/
 	public override void Hurt (float damage, Vector3 impact)
 	{
 		base.Hurt (damage, impact);
@@ -109,15 +116,15 @@ public class PlayerController : CommandController {
 			setHealth (getHealth() - damage);
 	}
 
-	/*
-	protected override void TickHitStun () {
-		if (StateFrame > 30) {
-			ChangeState (CHAR_STATE.NEUTRAL);
-			return;
-		}
-		//Debug.Log (StateFrame);
-		MoveCont.AddMovementInput (Vector3.back / 2);
+	public void PlayerWin() {
+		bPlayerWin = true;
 	}
-	*/
+
+	public void EnemyWin() {
+		bEnemyWin = true;
+	}
+
+
+
 
 }

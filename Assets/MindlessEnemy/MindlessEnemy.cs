@@ -54,6 +54,7 @@ public class MindlessEnemy : CommandController {
 	
 
 	void FixedUpdate () {
+		Debug.Log ((player.transform.position - transform.position).magnitude);
 		if(getHealth() <= 0)
 		{
 			Destroy (gameObject);
@@ -119,9 +120,9 @@ public class MindlessEnemy : CommandController {
 				} 
 				else if(playerCommand.getCurrentCommand() == "LongPoke") {
 					framesSinceAttack++;
-					Debug.Log (framesSinceAttack + ": " + playerCommand.getCurrentCommand());
-					if (framesSinceAttack > framesBeforeCounter) {
-						Debug.Log ("DUDE");
+
+					if (framesSinceAttack > 10) {
+						//Debug.Log ("DUDE");
 						AIState = AI_STATE.MOVE_IN_ATTACK;
 					}
 				}
@@ -137,15 +138,16 @@ public class MindlessEnemy : CommandController {
 						timeTillNextAction = 2f * Random.value;
 						timePassed = 0;
 
-						/*
-						if (Random.value > 0.7f) {
+
+						if (Random.value > 0.5f) {
 							nextAction = AI_STATE.MOVE_IN_FAKE_OUT;
 						} else {
 							nextAction = AI_STATE.MOVE_IN_ATTACK;
 						}
-						*/
-						nextAction = AI_STATE.MOVE_IN_ATTACK;
+						//nextAction = AI_STATE.MOVE_IN_FAKE_OUT;
+						//nextAction = AI_STATE.MOVE_IN_ATTACK;
 					}
+
 					if(timePassed > timeTillNextAction){
 						Debug.Log ("NextAction");
 						AIState = nextAction;
@@ -153,7 +155,7 @@ public class MindlessEnemy : CommandController {
 					}
 
 					//(6 + (Random.value - 0.5))
-					if ((player.transform.position - transform.position).magnitude < 6) {
+					if ((player.transform.position - transform.position).magnitude < 6 + Random.value ) {
 
 						Command newCmd = new LongPoke ();
 						if (newCmd.Initialize (this)) {
@@ -180,7 +182,7 @@ public class MindlessEnemy : CommandController {
 					if (CanMove) {
 						MoveCont.AddMovementInput (Vector3.right * strafeDir);
 					}
-					if ((player.transform.position - transform.position).magnitude < 6) {
+					if ((player.transform.position - transform.position).magnitude < 6.7) {
 
 						Command newCmd = new LongPoke ();
 						if (newCmd.Initialize (this)) {
@@ -196,9 +198,19 @@ public class MindlessEnemy : CommandController {
 				
 				float distFromPlayer = (player.transform.position - transform.position).magnitude;
 
-				if (distFromPlayer < 6) {
+				if(playerCommand.getCurrentCommand() == "LongPoke") {
+					framesSinceAttack++;
+
+					if (framesSinceAttack > framesBeforeCounter) {
+						//Debug.Log ("DUDE");
+						AIState = AI_STATE.MOVE_IN_ATTACK;
+					}
+				}
+				else if (distFromPlayer < 6) {
 					AIState = AI_STATE.RETREAT;
-				} else {
+				} 
+
+				else {
 					if (CanMove) {
 						heading = Quaternion.Inverse (transform.rotation) * heading;
 						MoveCont.AddMovementInput (heading);
