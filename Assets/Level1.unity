@@ -404,6 +404,10 @@ Prefab:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 32a3aa07e5c79984ba8eb9bef5ec6136, type: 2}
+    - target: {fileID: 1314235175066402, guid: 83b65e1cfb6699442bfd99c3bbab0fdf, type: 2}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 83b65e1cfb6699442bfd99c3bbab0fdf, type: 2}
   m_IsPrefabParent: 0
@@ -450,6 +454,16 @@ Prefab:
       propertyPath: m_Name
       value: MindlessEnemy (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 114742275933821272, guid: eb3578ff3e93f40409bd0715cd9d3ec5,
+        type: 2}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114967065068135924, guid: eb3578ff3e93f40409bd0715cd9d3ec5,
+        type: 2}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: eb3578ff3e93f40409bd0715cd9d3ec5, type: 2}
   m_IsPrefabParent: 0
@@ -466,7 +480,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4229805998955114, guid: 54ba7aac190093e4689b237547ab3fb2, type: 2}
       propertyPath: m_LocalPosition.y
-      value: 3
+      value: 15.69
       objectReference: {fileID: 0}
     - target: {fileID: 4229805998955114, guid: 54ba7aac190093e4689b237547ab3fb2, type: 2}
       propertyPath: m_LocalPosition.z

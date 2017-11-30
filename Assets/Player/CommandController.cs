@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using CommandSpace;
+
+
 /**
  *  This class contains all the necessary info in order to use moves with it. Priamrily this needs to exist so that it 
  * can be assumed that this Character operates under fighing game esque rules:

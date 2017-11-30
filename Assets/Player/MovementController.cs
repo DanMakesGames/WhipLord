@@ -228,7 +228,9 @@ public class MovementController : MonoBehaviour {
 			bool bGroundFound = false;
 			//Loop through the hits looking for a valid ground
 			for(int hitIndex = 0; hitIndex < hits.Length; hitIndex++) {
-				if (IsBottomHit (hits [hitIndex]) && IsSlopeWalkable(hits[hitIndex].normal)) {
+
+
+				if (hits[hitIndex].collider.gameObject != gameObject && IsBottomHit (hits [hitIndex]) && IsSlopeWalkable(hits[hitIndex].normal) ) {
 
 					//Set Ground plane
 					GroundPlane = hits[hitIndex].normal;

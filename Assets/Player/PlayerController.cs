@@ -69,22 +69,9 @@ public class PlayerController : CommandController {
 			if (newCommand.Initialize (this)) {
 				newCommand.OnStart ();
 				CurrentCmd = newCommand;
-				animator.SetTrigger ("Shoot");
 			}
 		}
-
-
-
-		if (Input.GetKey (KeyCode.Space)) {
-			if (State == CHAR_STATE.NEUTRAL) {
-				ChangeState (CHAR_STATE.BLOCKING);
-			}
-		}
-		else {
-			if (State == CHAR_STATE.BLOCKING) {
-				ChangeState (CHAR_STATE.NEUTRAL);
-			}
-		}
+			
 
 		//if (Input.GetKeyUp (KeyCode.Space)) {
 			
@@ -97,8 +84,8 @@ public class PlayerController : CommandController {
 			float verticalInput = Input.GetAxis ("Vertical");
 			MoveCont.AddMovementInput (new Vector3(0,0,verticalInput));
 
-			float roll = - Input.GetAxis ("Mouse Y");
-			playerCamera.transform.rotation = playerCamera.transform.rotation * Quaternion.Euler (roll,0,0);
+			//float roll = - Input.GetAxis ("Mouse Y");
+			//playerCamera.transform.rotation = playerCamera.transform.rotation * Quaternion.Euler (roll,0,0);
 
 			float pitch = Input.GetAxis("Mouse X");
 			MoveCont.AddRotationInput (Quaternion.Euler(0,pitch,0));
