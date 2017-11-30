@@ -20,9 +20,10 @@ public class PlayerController : CommandController {
 	void Start () {
 		MoveCont = GetComponent<MovementController> ();
 		playerCamera = GetComponentInChildren<Camera> ();
-		MoveCont.CastLayerMask = 1 << 9;
-		MoveCont.CastLayerMask = MoveCont.CastLayerMask | 1 << 10;
-		MoveCont.CastLayerMask = MoveCont.CastLayerMask | 1 << 11;
+		MoveCont.CastLayerMask = 1 << 8;
+		MoveCont.CastLayerMask = MoveCont.CastLayerMask | (1 << 7);
+		MoveCont.CastLayerMask = MoveCont.CastLayerMask | (1 << 9);
+		MoveCont.CastLayerMask = MoveCont.CastLayerMask | (1 << 10);
 		MoveCont.CastLayerMask = ~ MoveCont.CastLayerMask;
 
 		animator = GetComponent<Animator> ();
@@ -32,7 +33,7 @@ public class PlayerController : CommandController {
 	void OnGUI () {
 		
 		if(bPlayerWin || bEnemyWin) {
-			Debug.Log ("printing");
+			//Debug.Log ("printing");
 			Texture splashTextrue = null;
 			if (bPlayerWin)
 				splashTextrue = (Texture)Resources.Load ("WinSplash");

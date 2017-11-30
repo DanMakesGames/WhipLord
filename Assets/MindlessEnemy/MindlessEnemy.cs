@@ -10,6 +10,8 @@ public class MindlessEnemy : CommandController {
 	CommandController playerCommand;
 
 	const float maxOutBoxRange = 10;
+
+	// 6 so i can let you make the mistake of coming in and so i can make the mistake of fuckin up.
 	const float minOutBoxrange = 6;
 
 	const float minDistToRopes = 8;
@@ -54,7 +56,7 @@ public class MindlessEnemy : CommandController {
 	
 
 	void FixedUpdate () {
-		Debug.Log ((player.transform.position - transform.position).magnitude);
+		//Debug.Log ((player.transform.position - transform.position).magnitude);
 		if(getHealth() <= 0)
 		{
 			Destroy (gameObject);
@@ -139,7 +141,7 @@ public class MindlessEnemy : CommandController {
 						timePassed = 0;
 
 
-						if (Random.value > 0.5f) {
+						if (Random.value > 0.5f && distFromPlayer > 7 && distFromPlayer < 8.5) {
 							nextAction = AI_STATE.MOVE_IN_FAKE_OUT;
 						} else {
 							nextAction = AI_STATE.MOVE_IN_ATTACK;
@@ -182,7 +184,7 @@ public class MindlessEnemy : CommandController {
 					if (CanMove) {
 						MoveCont.AddMovementInput (Vector3.right * strafeDir);
 					}
-					if ((player.transform.position - transform.position).magnitude < 6.7) {
+					if ((player.transform.position - transform.position).magnitude < 7) {
 
 						Command newCmd = new LongPoke ();
 						if (newCmd.Initialize (this)) {

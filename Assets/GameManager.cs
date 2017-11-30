@@ -16,19 +16,22 @@ public class GameManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		if (!bGameOver) {
-			Debug.Log (playerController.getHealth () + " :: " + enemyController.getHealth ());
+			//Debug.Log (playerController.getHealth () + " :: " + enemyController.getHealth ());
 			if (playerController.getHealth () <= 0) {
 				StartCoroutine (EndGame (false));
 			} else if (enemyController.getHealth () <= 0) {
 				StartCoroutine (EndGame (true));
 		
-			}
+			} else if( playerController.transform.position.y < -3)
+				StartCoroutine (EndGame (false));
+			else if( enemyController.transform.position.y < -3)
+				StartCoroutine (EndGame (true));
 		}
 	}
 
 	IEnumerator EndGame(bool bPlayerWin){
 		//
-		Debug.Log(bPlayerWin);
+		//Debug.Log(bPlayerWin);
 
 		if (bPlayerWin) {
 			playerController.PlayerWin ();

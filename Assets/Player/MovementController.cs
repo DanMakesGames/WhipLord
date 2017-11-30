@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 
 public class MovementController : MonoBehaviour {
@@ -80,12 +81,6 @@ public class MovementController : MonoBehaviour {
 	// resolution.
 	private bool bIgnoreInitPenetration;
 
-	void Awake() {
-		CastLayerMask = 1 << 9;
-		CastLayerMask = CastLayerMask | 1 << 10;
-		CastLayerMask = CastLayerMask | 1 << 11;
-		CastLayerMask = ~CastLayerMask;
-	}
 	void Start () {
 		collisionBody = GetComponent<CapsuleCollider> ();
 		moveState = MOVE_STATE.FALLING;
@@ -93,13 +88,11 @@ public class MovementController : MonoBehaviour {
 		animator = GetComponent<Animator> ();
 
 		bIgnoreInitPenetration = false;
-		//castLayerMask = ~0;
-		//castLayerMask = 1 << 8;
-		//castLayerMask = ~castLayerMask;
 	}
 	
 
 	void Update () {
+		
 		/*
 		if (moveState == MOVE_STATE.WALKING) {
 			Debug.Log ("Walking");
@@ -108,6 +101,7 @@ public class MovementController : MonoBehaviour {
 		}
 		*/
 		//Do not run movement if there is no body.
+		//Debug.Log(oldVelocity);
 		if (collisionBody == null)
 			return;
 
@@ -216,6 +210,7 @@ public class MovementController : MonoBehaviour {
 			}
 
 		}
+		//Debug.Log (velocity);
 		oldVelocity = velocity;
 
 		//Peform Ground Check and update ground state
@@ -227,6 +222,8 @@ public class MovementController : MonoBehaviour {
 			RaycastHit[] hits = Physics.CapsuleCastAll(transform.position + new Vector3(0,collisionBody.height / 2.0f - collisionBody.radius, 0), 
 				transform.position - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), 
 				collisionBody.radius, Vector3.down, MAX_FLOOR_DIST, castLayerMask);
+			
+
 
 			bool bGroundFound = false;
 			//Loop through the hits looking for a valid ground
@@ -551,7 +548,7 @@ public class MovementController : MonoBehaviour {
 		Collider[] overlapss = Physics.OverlapCapsule(transform.position + new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), 
 			transform.position - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), collisionBody.radius);
 		if (overlapss.Length > 0) {
-			Debug.Log ("FAAAAAAAAAAAIAIIAIAIAIAIAIALILAIHLSFIHL:SYFDGAS");
+			Debug.Log ("Resolve Fail");
 		}
 
 		//Now Sweep out
@@ -648,8 +645,10 @@ public class MovementController : MonoBehaviour {
 	 */
 	private bool IsBottomHit(RaycastHit hit) {
 		Debug.DrawRay (hit.point, new Vector3(0,1,0));
+		//Debug.Log (hit.point);
 		Vector3 vectorFromCenter = hit.point - transform.position;
-		vectorFromCenter.y = 0;
+		vectorFromCenter.y = 0;  
+
 		/*
 		float distanceFromCenter = vectorFromCenter.sqrMagnitude;
 		Debug.Log ("Distance: " + distanceFromCenter + " Radius: " + Mathf.Pow (collisionBody.radius - GROUND_DETECT_RADIUS_TOLERANCE,2));
@@ -658,6 +657,7 @@ public class MovementController : MonoBehaviour {
 
 		float distanceFromCenter = vectorFromCenter.magnitude;
 		//Debug.Log ("Point"+ vectorFromCenter + "Distance: " + distanceFromCenter + " Radius: " + (collisionBody.radius  - GROUND_DETECT_RADIUS_TOLERANCE));
+		//Debug.Log (hit.point +" :: " + hit.collider.gameObject.name + " :: " + (distanceFromCenter < collisionBody.radius - GROUND_DETECT_RADIUS_TOLERANCE));
 		return distanceFromCenter < collisionBody.radius - GROUND_DETECT_RADIUS_TOLERANCE;
 	}
 
