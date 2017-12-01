@@ -429,7 +429,7 @@ GameObject:
   - component: {fileID: 114661485987918348}
   - component: {fileID: 114227380973373504}
   - component: {fileID: 95452482643513764}
-  - component: {fileID: 82569337920659336}
+  - component: {fileID: 82577146328490818}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -795,7 +795,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1662336466926020}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.48716164, y: 3.94, z: -2.6}
+  m_LocalPosition: {x: 0, y: 15.69, z: -12}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4010234244632186}
@@ -1325,7 +1325,7 @@ AudioListener:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1058705541852854}
   m_Enabled: 1
---- !u!82 &82569337920659336
+--- !u!82 &82577146328490818
 AudioSource:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -1334,8 +1334,8 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_audioClip: {fileID: 8300000, guid: ec88e60cdd51d00408b28e5e69d34add, type: 3}
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
@@ -1392,7 +1392,7 @@ AudioSource:
       tangentMode: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
-    m_RotationOrder: 4
+    m_RotationOrder: 0
   reverbZoneMixCustomCurve:
     serializedVersion: 2
     m_Curve:

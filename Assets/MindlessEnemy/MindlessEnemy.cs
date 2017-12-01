@@ -1,9 +1,20 @@
-﻿using System.Collections;
+﻿/**
+ * Written by Daniel Mann.
+ * created in 2017
+ * DanielMannGames@outlook.com
+ */
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using CommandSpace;
 
-
+/**
+ * Enemy that fights the player. Even though its called mindless its actually quite intellegent. Supposed to play 
+ * the "footies" game, moving in and out and trying to bait hits. It also has a circling behavior that prevents it from 
+ * falling of the edge of the map. This circling also places it on the inside of the play space, a favorable location for 
+ * playing a range game.
+ */
 public class MindlessEnemy : CommandController {
 	
 	GameObject player;
@@ -21,7 +32,7 @@ public class MindlessEnemy : CommandController {
 	int framesSinceAttack = 0;
 
 	enum ESCAPE_HOME {NORTH, SOUTH, EAST, WEST};
-	ESCAPE_HOME escHome;
+
 
 
 	enum AI_STATE { APPROACH, RETREAT, OUTBOX, MOVE_IN_ATTACK, MOVE_IN_FAKE_OUT, MOVE_IN_FAKE_OUT_R, ATTACK, STRAFE_ESCAPE}
@@ -48,15 +59,11 @@ public class MindlessEnemy : CommandController {
 			MoveCont.CastLayerMask = MoveCont.CastLayerMask | 1 << 10;
 			MoveCont.CastLayerMask = MoveCont.CastLayerMask | 1 << 11;
 			MoveCont.CastLayerMask = ~MoveCont.CastLayerMask;
-
-		//random = new Random (Time.time);
-
-		
 	}
 	
 
 	void FixedUpdate () {
-		//Debug.Log ((player.transform.position - transform.position).magnitude);
+		
 		if(getHealth() <= 0)
 		{
 			Destroy (gameObject);
@@ -286,7 +293,7 @@ public class MindlessEnemy : CommandController {
 				strafeDir = -1;
 			} else
 				strafeDir = 1;
-			escHome = ESCAPE_HOME.EAST;
+			
 			AIState = AI_STATE.STRAFE_ESCAPE;
 			center = player.transform.position;
 			startOffset = transform.position - center;
@@ -297,7 +304,7 @@ public class MindlessEnemy : CommandController {
 				strafeDir = 1;
 			} else
 				strafeDir = -1;
-			escHome = ESCAPE_HOME.WEST;
+			
 			AIState = AI_STATE.STRAFE_ESCAPE;
 			center = player.transform.position;
 			startOffset = transform.position - center;
@@ -310,7 +317,7 @@ public class MindlessEnemy : CommandController {
 			} else
 				strafeDir = -1;
 
-			escHome = ESCAPE_HOME.NORTH;
+
 			AIState = AI_STATE.STRAFE_ESCAPE;
 			center = player.transform.position;
 			startOffset = transform.position - center;
@@ -322,7 +329,7 @@ public class MindlessEnemy : CommandController {
 			} else
 				strafeDir = 1;
 
-			escHome = ESCAPE_HOME.SOUTH;
+
 			AIState = AI_STATE.STRAFE_ESCAPE;
 			center = player.transform.position;
 			startOffset = transform.position - center;

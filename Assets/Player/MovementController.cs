@@ -1,38 +1,38 @@
-﻿using System.Collections;
+﻿/**
+ * Written by Daniel Mann.
+ * created in 2017
+ * DanielMannGames@outlook.com
+ */
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
 
 
 public class MovementController : MonoBehaviour {
-	// Needs the ability to keep track of the ground, not only in terms of floor angle, but also in termms of object, so
-	// that elevators and other sorts of moving platforms could be implemented.
 
-	//Constants
+	// Distance to place the player from stopping hit when moving. This spacing helps prevent future penetration.
+	private const float MOVE_HIT_SPACE = 0.001f;
 
-	// Distance to place stop before a hit object durring a move. This helps prevent moving inside of objects.
-	//private const float MOVE_HIT_SPACE = 0.001f;
-	private const float MOVE_HIT_SPACE = 0.02f;
-	//private const float MOVE_HIT_SPACE = 0.1f;
-	//private const float MOVE_HIT_SPACE = 0.0f;
+	// Tolerance to teleport resolve
 	private const float RESOLVE_STRICTNESS = 0.001f;
-	private const float PENETRATE_ADDITIONAL_SPACING = 0.125f;
-	//private const float PENETRATE_ADDITIONAL_SPACING = 0.001f;
-	//private const float PENETRATE_ADDITIONAL_SPACING = 0.425f;
-	//private const float PENETRATE_ADDITIONAL_SPACING = 0.025f;
-	//private const float PENETRATE_ADDITIONAL_SPACING = 0.0001f;
-	//private const float GROUND_DETECT_RADIUS_TOLERANCE = 0.15f;
-	//private const float GROUND_DETECT_RADIUS_TOLERANCE = 0.05f;
-	private const float GROUND_DETECT_RADIUS_TOLERANCE = 0.005f;
-	//private const float GROUND_DETECT_RADIUS_TOLERANCE = 0.001f;
-	//private const float MAX_FLOOR_DIST = 2.4f;
 
+	// Additional spacing when resolving penetration 
+	private const float PENETRATE_ADDITIONAL_SPACING = 0.125f;
+
+	// Tolerance for detection if a hit is a ground hit
+	private const float GROUND_DETECT_RADIUS_TOLERANCE = 0.005f;
+
+	// Max and min distances from ground before correction.
 	private const float MAX_FLOOR_DIST = 0.03f;
-	//private const float MIN_FLOOR_DIST = 1.0f;
 	private const float MIN_FLOOR_DIST = 0.01f;
 
 
-	enum MOVE_STATE { WALKING, FALLING, HALTED };
+	enum MOVE_STATE { WALKING, // Grounded movement
+					  FALLING, // Uncontrolled falling movement.
+					  HALTED // This state prevents any movement from happening. Freezes the movement.
+					};
 	private MOVE_STATE moveState;
 
 	[SerializeField]
@@ -44,7 +44,7 @@ public class MovementController : MonoBehaviour {
 	[SerializeField]
 	private float maxWalkableSlope = 60;
 
-
+	// This mask determines what layers this movement controller colides with.
 	private int castLayerMask;
 	public int CastLayerMask{
 		get { return castLayerMask;}
@@ -82,7 +82,10 @@ public class MovementController : MonoBehaviour {
 	private bool bIgnoreInitPenetration;
 
 	void Start () {
+		// Needs a capsule collider in order to function.
 		collisionBody = GetComponent<CapsuleCollider> ();
+
+		// Start falling
 		moveState = MOVE_STATE.FALLING;
 
 		animator = GetComponent<Animator> ();
@@ -92,44 +95,50 @@ public class MovementController : MonoBehaviour {
 	
 
 	void Update () {
-		
-		/*
-		if (moveState == MOVE_STATE.WALKING) {
-			Debug.Log ("Walking");
-		} else {
-			Debug.Log ("FALLING");
-		}
-		*/
-		//Do not run movement if there is no body.
-		//Debug.Log(oldVelocity);
+
+		// Dont run with there is no collision capslue attached to this gameObject.
 		if (collisionBody == null)
 			return;
 
+		//first consume input
 		ProcessInput ();
 
+		//
 		if(moveState != MOVE_STATE.HALTED)
 			PerformMovement ();
 
 		UpdateAnimation ();
 	}
 
-	void UpdateAnimation(){
+	/**
+	 * Update the animation of the character usiing this movement controller. In future implementations remove this 
+	 * functionality from this class.
+	 */
+	void UpdateAnimation() {
+
+
 		if (animator != null) {
 			
-			if (oldVelocity.magnitude > 0) {
+			if (oldVelocity.magnitude > 0 && moveState != MOVE_STATE.FALLING) {
+
+				// Start run aimation if the player is moveing.
 				animator.SetBool ("WalkForward", true);
+
+				// Based on the heading of the player set the Heading property in the animator. This controls the 
+				// direction the legs of the character run in. 
 				Vector3 velocityHeading = oldVelocity;
 				velocityHeading.y = 0;
+
+				// Convert to the GameObject local space
 				Vector3 heading = Quaternion.Inverse (transform.rotation) * velocityHeading;
 
 				float finalHeading = Vector3.Dot (heading.normalized, Vector3.right) * 0.5f ;
-				if(Vector3.Dot(heading.normalized,Vector3.forward) < -0.1) {
-				finalHeading = -finalHeading;
-				}
-				//Vector3 rot = transform.rotation.eulerAngles;
-				//Quaternion headRot = Quaternion.Euler (new Vector3 (0, rot.y, 0));
 
-				//float heading = Mathf.Sin (rot.y) * 0.5f + 0.5f;
+				// Make it so the legs have the opposite rotation if the palyer is moving backwards
+				if(Vector3.Dot(heading.normalized,Vector3.forward) < -0.1) {
+					finalHeading = -finalHeading;
+				}
+
 
 				animator.SetFloat ("Heading", finalHeading + 0.5f);
 
@@ -140,32 +149,32 @@ public class MovementController : MonoBehaviour {
 	}
 	
 	/**
-	 * <summary>
-	 * Method that is the head of all movement logic. Calling this each update what moves the player.
-	 * </summary>
-	 * 
+	 * Method that is the head of all movement logic. Calling this each update is what moves the player.
 	 */
 	void PerformMovement() {
+
 		//Velocity Update
-		if (moveState == MOVE_STATE.WALKING) {
-			
-		}
-		else if (moveState == MOVE_STATE.FALLING) {
+		if (moveState == MOVE_STATE.FALLING) {
 			velocity += new Vector3 (0, gravity, 0) * Time.deltaTime;
 		}
 
+		// moveDelta is the desired position change.
 		Vector3 moveDelta = velocity * Time.deltaTime;
+
+		// rotDelta is the desired rotation change.
 		Quaternion rotDelta = Quaternion.Euler(rotVelocity.eulerAngles * Time.deltaTime);
-		//Debug.Log (moveDelta);
+
+		// Initial Move
 		RaycastHit hit;
-		bool bCompleteMove = MoveAndResolve(moveDelta, rotDelta,out  hit);
+		bool bCompleteMove = MoveAndResolve(moveDelta, rotDelta, out hit);
 
 		//Handle Blocking collision
 		if (!bCompleteMove) {
 			
-			//If the Hit is a bottom hit
+			// If the Hit is a bottom hit
 			if (IsBottomHit (hit)) {
-				
+
+				// If a walkable surface is hit, stop falling
 				if (moveState == MOVE_STATE.FALLING) {
 					if (IsSlopeWalkable (hit.normal)) {
 						GroundPlane = hit.normal;
@@ -174,24 +183,26 @@ public class MovementController : MonoBehaviour {
 				} 
 				else if (moveState == MOVE_STATE.WALKING) {
 					
-					// Handle Walk Up here.
 
+					// IF we hit a slope, start walkup if possible.
 					if (IsSlopeWalkable (hit.normal)) {
-						
+
+						// walkup.
 						RaycastHit walkupHit;
 						Vector3 walkupDelta = moveDelta * (1 - (hit.distance / moveDelta.magnitude));
 						bool bCompleteWalkup = PerformWalkup (walkupDelta, hit.normal, out walkupHit);
 
-						//Walkup into wallslide
+						// Walkup into wallslide
 						if (!bCompleteWalkup) {
 							Vector3 walkupWallSlideDelta = walkupDelta * (1 - (walkupHit.distance / walkupDelta.magnitude));
 							PerformWallSlide (walkupWallSlideDelta, walkupHit.normal);
 						}
 					}
+
+					// If the slope is not walkable, wall-side against it.
 					else {
 						Vector3 slopeWallSlide = moveDelta * (1 - (hit.distance / moveDelta.magnitude));
 						bool bCompleteWallSlide = PerformWallSlide (slopeWallSlide,hit.normal);
-					
 					}
 				}
 			}
@@ -210,37 +221,36 @@ public class MovementController : MonoBehaviour {
 			}
 
 		}
-		//Debug.Log (velocity);
+
+		// Capture velocity 
 		oldVelocity = velocity;
 
-		//Peform Ground Check and update ground state
+		// Peform Ground Check and update ground state. 
 		if (moveState == MOVE_STATE.WALKING) {
+			
 			// Fist sweep downward and check for ground
-			//RaycastHit[] hits = Physics.CapsuleCastAll (transform.position + new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0),
-			//	transform.position - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), collisionBody.radius, moveDelta.normalized, 
-			//	moveDelta.magnitude);
 			RaycastHit[] hits = Physics.CapsuleCastAll(transform.position + new Vector3(0,collisionBody.height / 2.0f - collisionBody.radius, 0), 
 				transform.position - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), 
 				collisionBody.radius, Vector3.down, MAX_FLOOR_DIST, castLayerMask);
 			
-
-
+			// Set true is valid ground is found
 			bool bGroundFound = false;
+
 			//Loop through the hits looking for a valid ground
 			for(int hitIndex = 0; hitIndex < hits.Length; hitIndex++) {
 
-
+				// If hit is a vlid ground
 				if (hits[hitIndex].collider.gameObject != gameObject && IsBottomHit (hits [hitIndex]) && IsSlopeWalkable(hits[hitIndex].normal) ) {
 
 					//Set Ground plane
 					GroundPlane = hits[hitIndex].normal;
 				
 
-					//Floor Magentism
+					// Floor Magentism. Move down so the distance is minimum.
 					if( hits[hitIndex].distance > MIN_FLOOR_DIST || hits[hitIndex].distance < MIN_FLOOR_DIST) {
-						//Debug.Log ("Standing adjust");
+						
 						RaycastHit adjustHit;
-						MoveAndResolve (new Vector3(0.0f, MIN_FLOOR_DIST - hits[hitIndex].distance, 0.0f ),transform.rotation,out adjustHit);
+						MoveAndResolve (new Vector3(0.0f, MIN_FLOOR_DIST - hits[hitIndex].distance, 0.0f), transform.rotation, out adjustHit);
 					}
 
 					bGroundFound = true;
@@ -249,11 +259,12 @@ public class MovementController : MonoBehaviour {
 			
 			}
 
+			// If no valid ground is found then the player should begin to fall.
 			if (!bGroundFound) {
 				
-				Debug.Log ("NO GROUND FOUND SET FALLING");
 				moveState = MOVE_STATE.FALLING;
 			}
+			// If there is a ground apply ground friction. Prevent player from maintaining velocity.
 			else {
 				
 				velocity = Vector3.zero;
@@ -275,7 +286,7 @@ public class MovementController : MonoBehaviour {
 
 
 	/**
-	 * This handles interface with player controller for controlling player rotation. Can only effect pitch. Unlike 
+	 * This handles interface with player controller for controlling player rotation. Can only effect yaw.
 	 * 
 	 * @param inputRotation Rotation to add to the rotation of the player.
 	 */
@@ -288,9 +299,9 @@ public class MovementController : MonoBehaviour {
 	 * This processes all the input that has been collected up until this point. 
 	 */
 	void ProcessInput() {
+
+		// If we are walking transfrom inputVelocity into velocity.
 		if (moveState == MOVE_STATE.WALKING) {
-			// This is gonna need to change for sloped floor. Change after finishing MOVE system.
-			//velocity += transform.rotation * inputVelocity * maxMoveSpeed;
 			Vector3 rotSafeInput = (transform.rotation * inputVelocity).normalized;
 			float Y = -Vector3.Dot (GroundPlane, rotSafeInput) / GroundPlane.y;
 			Vector3 direction = rotSafeInput;
@@ -307,31 +318,29 @@ public class MovementController : MonoBehaviour {
 		
 
 	/**
-	 * Moves player , stops movement if it collides with something it it's way.
+	 * Moves player , stops movement if it collides with something it it's way. Foundation of all movement.
 	 * 
+	 * @param moveDelta Change in position.
+	 * @param rotDelta Change in rotation.
+	 * @param outHit returns the hit object if this move does not fully complete.
+	 * @param ignoredObjects List of specific objects to not collide with during this move.
 	 * @return Returns true if move completes with no collision.
 	 */
 	public bool Move(Vector3 moveDelta, Quaternion rotDelta, out RaycastHit outHit, LinkedList<GameObject> ignoreObjects) {
 		outHit = new RaycastHit();
+
 		//Start with rotation update.
-		//transform.rotation = transform.rotation * rotVelocity;
 		transform.rotation = transform.rotation * rotVelocity;
 
-		// Start by doing collision sweep.
+		// Start movement change by doing collision sweep.
 		RaycastHit[] hits = Physics.CapsuleCastAll (transform.position + new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0),
 			transform.position - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), collisionBody.radius, moveDelta.normalized, 
 			moveDelta.magnitude, castLayerMask);
 
-		/*
-		Debug.Log ("HIT OBJECTS: ");
-		for (int hitIndex = 0; hitIndex < hits.Length; hitIndex++) {
-			Debug.Log (hits[hitIndex].collider.gameObject.name + " :: " + hits[hitIndex].distance);
-		}
-		*/
-
+		// Keeps track if this move completed withough hitting anything.
 		bool bCompleteMove = true;
-		//Process hits. If a valid hit is found, then blockingHit is set to it. If not then no hit occured.
-		//for(int hitIndex = 0; hitIndex < hits.Length; hitIndex++) {
+
+		//Search for initial penetrations.
 		for(int hitIndex = hits.Length - 1; hitIndex >= 0; hitIndex--) {
 			if (hits[hitIndex].collider.gameObject != gameObject && hits [hitIndex].distance == 0 && hits [hitIndex].point == Vector3.zero) {
 				bool bIgnored = false;
@@ -341,7 +350,7 @@ public class MovementController : MonoBehaviour {
 					for (int ignoreIndex = 0; ignoreIndex < ignoreObjects.Count; ignoreIndex++) {
 						//If this actor is one of the ignored actors.
 						if (currentNode.Value == hits [hitIndex].collider.gameObject) {
-							//Debug.Log ("\tIGNORING: " + hits [hitIndex].collider.gameObject.name);
+							
 							bIgnored = true;
 							break;
 						}
@@ -359,27 +368,25 @@ public class MovementController : MonoBehaviour {
 		}
 
 
+		// Holds the distnace of the closest hit.
 		double smallest = -1;
-		for (int hitIndex = 0; hitIndex < hits.Length; hitIndex++) {
-		//for (int hitIndex = hits.Length - 1; hitIndex >= 0; hitIndex--) {
 
-			//Debug.Log ("name: " + hits[hitIndex].collider.gameObject.name);
+		// Process all hits, find the first valid occuring one.
+		for (int hitIndex = 0; hitIndex < hits.Length; hitIndex++) {
+
+			// keeps track if this hit should be igrnored (is not valid)
 			bool bIgnored = false;
 
-
+			// if this is the movecomponent body then ignore
 			if(hits[hitIndex].collider.gameObject == gameObject) {
-				//Debug.Log ("Self");
+				
 				bIgnored = true;
 			}
-
-
-			
-			//Testing if this actor is ignored
+				
+			//Testing if this actor on list of ignored
 			if (ignoreObjects != null) {
 				
-
 				LinkedListNode<GameObject> currentNode = ignoreObjects.First;
-
 
 				for (int ignoreIndex = 0; ignoreIndex < ignoreObjects.Count; ignoreIndex++) {
 					
@@ -393,29 +400,27 @@ public class MovementController : MonoBehaviour {
 
 					currentNode = currentNode.Next;
 				}
-			
-			
-			
 			}
 
+			// TODO: remove this block.
 			// Test if the hit is a start penetrating hit. If so, return the function.
 			if (!bIgnored && hits [hitIndex].distance == 0 && hits [hitIndex].point == Vector3.zero) {
 				if (bIgnoreInitPenetration == true) {
-					//Debug.Log ("Ignoring start penetrating collision");
+					
 					bIgnored = true;
 				} else {
-					//Debug.Log ("Start Penetrating");
+					
 					outHit = hits [hitIndex];
 					return false;
 				}
 			}
-
-
+				
 			// If the hit is not ignored, and is a potential real one.
 			if( !bIgnored && Vector3.Dot(hits[hitIndex].normal, moveDelta.normalized) < 0) {
-				//Debug.Log ("REAL HIT");
+				
 				bCompleteMove = false;
 
+				// Test if this hit is the closest (and thus the one that would occur first).
 				if (hits[hitIndex].distance < smallest || smallest == -1) {
 					outHit = hits [hitIndex];
 					smallest = hits [hitIndex].distance;
@@ -425,21 +430,17 @@ public class MovementController : MonoBehaviour {
 
 		}
 
-
-
+		// If check completed withough finding a valid hit, then perform the full move.
 		if (bCompleteMove) {
-			//Debug.Log ("Complete Move: " + moveDelta);
+			
 			transform.position += moveDelta;
-
 			return true;
 		}
+		// Otherwise move up to the hit location.
 		else {
-			//Debug.Log ("Blocked Move: "+ outHit.collider.gameObject.name + " : " + outHit.distance);
 			if (bIgnoreInitPenetration)
 				transform.position += moveDelta * ((outHit.distance / moveDelta.magnitude));
-				//transform.position += moveDelta * (1 -(outHit.distance / moveDelta.magnitude));
 			else
-				//transform.position += moveDelta * ((outHit.distance / moveDelta.magnitude)) + (outHit.normal * MOVE_HIT_SPACE);
 				transform.position += moveDelta * ((outHit.distance / moveDelta.magnitude)) + (outHit.normal * MOVE_HIT_SPACE);
 			return false;
 		}
@@ -463,6 +464,7 @@ public class MovementController : MonoBehaviour {
 	 */
 	public bool MoveAndResolve(Vector3 moveDelta, Quaternion rotDelta, out RaycastHit outHit) {
 		RaycastHit hit;
+
 		//Initial Move Attempt
 		bool bCompleteMove = Move(moveDelta, rotDelta, out hit);
 
@@ -480,16 +482,22 @@ public class MovementController : MonoBehaviour {
 
 
 	/**
-	 * Attempts to move the player out of a penetration.
+	 * Attempts to move the player out of a penetration. Tries a couple of different techniques before giving up.
+	 * 
+	 * @param proposedAdjustment This is the proposed adjustment to perform. Relative to palyer current location.
+	 * @param hit This is the overlapping hit between the character and the object they are penetrating.
+	 * @param newRotation New rotation to change to. TODO: remove this from the function, it is unneeded.
+	 * @return Returns ture if penetration resolution succeeds, false if not.
 	 */
 	private bool ResolvePenetration(Vector3 proposedAdjustment, RaycastHit hit, Quaternion newRotation) {
 		
-		//Frist overlap check and see if the location we want to move to is clean
+		//Frist overlap check and see if the location we want to move to is clean of other objects
 		Collider[] overlaps = Physics.OverlapCapsule(transform.position + proposedAdjustment + new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), 
 			transform.position + proposedAdjustment - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), collisionBody.radius +  RESOLVE_STRICTNESS, castLayerMask);
 
 		Debug.Log ("PENETRATION RESOLVE: " + hit.collider.gameObject.name + " :: " +hit.normal + "::" + proposedAdjustment);
-		//Loop and find the first overlap that is not hitting gameObject
+
+		//Loop and find the first overlap
 		bool bValidOverlapOccured = false;
 		for (int index = 0; index < overlaps.Length; index++) {
 			if( overlaps[index].gameObject != gameObject) {
@@ -497,7 +505,7 @@ public class MovementController : MonoBehaviour {
 			}
 		}
 
-		//No overlap occured, so the player can just be teleported
+		// No overlap occured, so the player can just be teleported
 		if (!bValidOverlapOccured) {
 			Debug.Log ("\tTeleport Resolution");
 			transform.position += proposedAdjustment;
@@ -505,9 +513,10 @@ public class MovementController : MonoBehaviour {
 		// If we cannot teleport out try the two methods of resolution.
 		else {
 			Debug.Log ("\tMove out Resolution: wall");
+
 			// First try to move out of the penetration.
 			RaycastHit moveOutHit;
-			//bIgnoreInitPenetration = true;
+			bIgnoreInitPenetration = true;
 
 
 			LinkedList<GameObject> ignoreList = new LinkedList<GameObject> ();
@@ -515,10 +524,10 @@ public class MovementController : MonoBehaviour {
 			bool bCompleteMove = Move (proposedAdjustment, newRotation, out moveOutHit, ignoreList);
 
 
-			//bIgnoreInitPenetration = false;
+			bIgnoreInitPenetration = false;
 			Debug.Log ("Distance Traveled: " + moveOutHit.distance + "::point:: " + moveOutHit.point);
 
-			//Dual Penetration solver
+			// Dual Penetration solver
 			if(!bCompleteMove && IsStartPenetrating(moveOutHit)) {
 				Debug.Log ("\t\tDual Penetration solver");
 				Vector3 otherAdjustment = CalcPenetrationAdjustment(moveOutHit);
@@ -532,6 +541,7 @@ public class MovementController : MonoBehaviour {
 			
 			}
 
+			// Third occasional solver. Not very effective. Last resort.
 			if (!bCompleteMove) {
 				Debug.Log ("\t\tOTHER SOLVER");
 				Vector3 otherAdjustment = moveOutHit.normal * PENETRATE_ADDITIONAL_SPACING;
@@ -546,32 +556,38 @@ public class MovementController : MonoBehaviour {
 		
 		}
 
+		bIgnoreInitPenetration = false;
+
 		//Check if still penetrating and return false if we are.
 		Collider[] overlapss = Physics.OverlapCapsule(transform.position + new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), 
 			transform.position - new Vector3(0, collisionBody.height / 2.0f - collisionBody.radius, 0), collisionBody.radius);
 		if (overlapss.Length > 0) {
 			Debug.Log ("Resolve Fail");
+			return false;
 		}
-
-		//Now Sweep out
-
-		bIgnoreInitPenetration = false;
+			
 		return true;
-
 	}
 
 
+	/**
+	 * Calculate a movement that will remove the character from penetation.
+	 * 
+	 * @param hit Penetrating hit.
+	 * @return movement that should resolve the penetration.
+	 */
 	private Vector3 CalcPenetrationAdjustment(RaycastHit hit) {
+
 		//If not penetrating then return nothing.
 		if(!IsStartPenetrating(hit)) {
 			return Vector3.zero;
 		}
-
+			
 		Vector3 direction;
 		float distance;
 		bool  bDidCalc = Physics.ComputePenetration (collisionBody, transform.position, transform.rotation, 
 			hit.collider, hit.collider.transform.position, hit.collider.transform.rotation, out direction, out distance);
-		//Debug.Log ("Distance::: " + distance);
+		
 		float penetrationDepth  = (distance > 0.0f ? distance : PENETRATE_ADDITIONAL_SPACING);
 		return  direction.normalized * (penetrationDepth + PENETRATE_ADDITIONAL_SPACING);
 	}
@@ -588,7 +604,6 @@ public class MovementController : MonoBehaviour {
 	 */
 	private bool PerformWalkup(Vector3 moveDelta, Vector3 slopeNormal, out RaycastHit outHit) {
 		
-		Debug.Log ("Perform Walkup called.");
 		slopeNormal.Normalize ();
 		Vector3 flatMovement = new Vector3 (moveDelta.x, 0.0f, moveDelta.z);
 
@@ -605,21 +620,21 @@ public class MovementController : MonoBehaviour {
 		return bCompleteMove;
 	}
 
-
+	/**
+	 * Performes a wall slide. Actaully does the movement and returns true if the full movement completes without
+	 * interuption.
+	 */
 	private bool PerformWallSlide(Vector3 moveDelta, Vector3 wallNormal) {
 		
 		wallNormal.Normalize ();
 		Vector3 travelDirection = Vector3.Cross (GroundPlane, wallNormal).normalized;
 
 		Vector3 slideVector = moveDelta.magnitude * (Vector3.Dot(moveDelta.normalized, travelDirection)) * travelDirection;
-		//Debug.DrawLine (wallHit.point, wallHit.point + slideVector * 100);
+
 		RaycastHit slideHit;
 
-		//bool bCompleteMove = MoveAndResolve (slideVector,transform.rotation, out slideHit);
-		Debug.Log ("Wall Slide: " + slideVector.x + ", " + slideVector.y + ", " + slideVector.z);
 		bool bCompleteMove = MoveAndResolve (slideVector,transform.rotation, out slideHit);
-		//Debug.Log ("Wall Slide: " + slideVector + " :: " + slideHit.distance);
-		//Debug.Log ("\t" + IsBottomHit (slideHit) + " :: " + IsSlopeWalkable (slideHit.normal));
+
 		if (!bCompleteMove) {
 			
 			if (IsBottomHit (slideHit) && IsSlopeWalkable (slideHit.normal)) {
@@ -637,6 +652,9 @@ public class MovementController : MonoBehaviour {
 	}
 
 
+	/**
+	 * Determines if a hit is one reporting an initual penetration.
+	 */
 	private bool IsStartPenetrating(RaycastHit hit) {
 		return (hit.distance == 0 && hit.point == Vector3.zero);
 	}
@@ -646,20 +664,11 @@ public class MovementController : MonoBehaviour {
 	 * Checks if the hit is touching the botttom hemisphere of the capsule collider
 	 */
 	private bool IsBottomHit(RaycastHit hit) {
-		Debug.DrawRay (hit.point, new Vector3(0,1,0));
-		//Debug.Log (hit.point);
+
 		Vector3 vectorFromCenter = hit.point - transform.position;
 		vectorFromCenter.y = 0;  
 
-		/*
-		float distanceFromCenter = vectorFromCenter.sqrMagnitude;
-		Debug.Log ("Distance: " + distanceFromCenter + " Radius: " + Mathf.Pow (collisionBody.radius - GROUND_DETECT_RADIUS_TOLERANCE,2));
-		return distanceFromCenter < Mathf.Pow (collisionBody.radius - GROUND_DETECT_RADIUS_TOLERANCE,2);
-		*/
-
 		float distanceFromCenter = vectorFromCenter.magnitude;
-		//Debug.Log ("Point"+ vectorFromCenter + "Distance: " + distanceFromCenter + " Radius: " + (collisionBody.radius  - GROUND_DETECT_RADIUS_TOLERANCE));
-		//Debug.Log (hit.point +" :: " + hit.collider.gameObject.name + " :: " + (distanceFromCenter < collisionBody.radius - GROUND_DETECT_RADIUS_TOLERANCE));
 		return distanceFromCenter < collisionBody.radius - GROUND_DETECT_RADIUS_TOLERANCE;
 	}
 
@@ -670,7 +679,5 @@ public class MovementController : MonoBehaviour {
 	private bool IsSlopeWalkable(Vector3 groundNormal) {
 		return Vector3.Angle (groundNormal, Vector3.up) < maxWalkableSlope ;
 	}
-
-
 }
 	

@@ -1,22 +1,33 @@
-﻿using System.Collections;
+﻿/**
+ * Written by Daniel Mann.
+ * created in 2017
+ * DanielMannGames@outlook.com
+ */
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+/**
+ * Monitors the game and decides a winner. After decinding a winner, it displays a message showing who won and ends the 
+ * game.
+ */
 public class GameManager : MonoBehaviour {
 	PlayerController playerController;
 	CommandController enemyController;
 	bool bGameOver = false;
 
-	// Use this for initialization
+
 	void Start () {
 		playerController = GameObject.FindGameObjectWithTag ("Player").GetComponent<PlayerController> ();
 		enemyController = GameObject.FindGameObjectWithTag ("Enemy").GetComponent<CommandController> ();
 	}
 	
-	// Update is called once per frame
+
 	void Update () {
 		if (!bGameOver) {
-			//Debug.Log (playerController.getHealth () + " :: " + enemyController.getHealth ());
+
 			if (playerController.getHealth () <= 0) {
 				StartCoroutine (EndGame (false));
 			} else if (enemyController.getHealth () <= 0) {
@@ -28,19 +39,16 @@ public class GameManager : MonoBehaviour {
 				StartCoroutine (EndGame (true));
 		}
 	}
-
+		
 	IEnumerator EndGame(bool bPlayerWin){
-		//
-		//Debug.Log(bPlayerWin);
-
+		
 		if (bPlayerWin) {
 			playerController.PlayerWin ();
 		} else {
 			playerController.EnemyWin ();
 		}
 
-		yield return new WaitForSeconds (15);
+		yield return new WaitForSeconds (5);
 		Application.Quit ();
 	}
-	//make end game function on another thread.
 }
